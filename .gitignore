@@ -43,3 +43,7 @@
 
 *.pyc
 *.pyo
+
+server/.idea/misc.xml
+server/.idea/modules.xml
+server/.idea/server.iml
