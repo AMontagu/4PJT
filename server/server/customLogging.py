@@ -8,8 +8,6 @@ import inspect
 import json
 import logging
 
-import apipython.globalInfo as globalInfo
-
 logger = None
 logFormatter = None
 ch = None
@@ -34,8 +32,9 @@ def initializeLog(loggerName, fileName, enableStdOut=False, level=10):
 
 	logger.setLevel(level)
 	try:
-		fh = logging.FileHandler(globalInfo.getHeaseRepertory() + "resources/log/" + str(fileName))
+		fh = logging.FileHandler("log/" + str(fileName))
 	except PermissionError:
+		print("error permission")
 		fh = logging.FileHandler("/tmp/" + str(fileName))
 
 	fh.setFormatter(logFormatter)

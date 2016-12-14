@@ -8,13 +8,13 @@ See https://github.com/EvotionTeam/hease-robot/wiki/WebSocket-communication
 import base64
 import os
 
+from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
 from channels.handler import AsgiHandler
 from channels.generic.websockets import WebsocketConsumer, JsonWebsocketConsumer, BaseConsumer
 from channels import Group
 import json
 from server.customLogging import *
-
 
 
 class TestJsonConsumer(JsonWebsocketConsumer):
@@ -36,8 +36,8 @@ class TestJsonConsumer(JsonWebsocketConsumer):
 	def connect(self, message, **kwargs):
 		print("connect test json")
 		text = json.dumps({
-				"action": "add",
-			})
+			"action": "add",
+		})
 		Group("test").send({
 			"text": text,
 		})
@@ -45,13 +45,13 @@ class TestJsonConsumer(JsonWebsocketConsumer):
 	def receive(self, content, **kwargs):
 		print("receive test json :")
 		print(content)
-		#self.send(content)
+		# self.send(content)
 		text = json.dumps({
-				"action": "message",
-				"user": self.message.user.username,
-				"authenticated": self.message.user.is_authenticated(),
-				"message": content["text"],
-			})
+			"action": "message",
+			"user": self.message.user.username,
+			"authenticated": self.message.user.is_authenticated(),
+			"message": content["text"],
+		})
 		Group("test").send({
 			"text": text,
 		})
@@ -59,14 +59,14 @@ class TestJsonConsumer(JsonWebsocketConsumer):
 	def disconnect(self, message, **kwargs):
 		print("disconnect test json")
 		text = json.dumps({
-				"action": "disconnect",
-			})
+			"action": "disconnect",
+		})
 		Group("test").send({
 			"text": text,
 		})
 
 
-class ApiJsonConsumer(JsonWebsocketConsumer):
+class ChatConsumer(JsonWebsocketConsumer):
 	"""
 	Handle web socket exchange in our app
 
@@ -78,21 +78,25 @@ class ApiJsonConsumer(JsonWebsocketConsumer):
 	slight_ordering = False
 
 	def connection_groups(self, **kwargs):
-		if "Identifier" in kwargs:
-			identifier = kwargs["Identifier"]
-		else:
-			# LOGINFO("no identifier in kwargs")
-			identifier = "robot"
-
-		return [identifier]
+		listGroupName = list()
+		for group in self.message.user.groups:
+			listGroupName.append(group.name)
+		return listGroupName
 
 	def connect(self, message, **kwargs):
 		LOGDEBUG("connection ApiJsonConsumer")
 
-		text = {
-			"action": "connected",
-		}
-		self.send(text)
+		if self.message.user.is_authenticated():
+			text = {
+				"action": "connected",
+			}
+			self.send(text)
+		else:
+			text = {
+				"action": "not-logged-in",
+			}
+			self.send(text)
+			self.close()
 
 	def receive(self, content, **kwargs):
 		LOGINFO("receive ApiJsonConsumer json :")
@@ -118,4 +122,3 @@ def ws_message(message):
 	LOGWARN("message not in project protocole :")
 	LOGWARN(message.content)
 	LOGWARN(message.content['text'])
-

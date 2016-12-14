@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
+
+if sys.platform.startswith('win'):
+    LINUX = False
+else:
+    LINUX = True
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'project',
 ]
 
@@ -69,7 +76,25 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'PJT.wsgi.application'
+if LINUX:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "asgi_redis.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [("localhost", 6379)],
+            },
+            "ROUTING": "server.routing.channel_routing",
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "asgiref.inmemory.ChannelLayer",
+            "ROUTING": "server.routing.channel_routing",
+        },
+    }
+
+WSGI_APPLICATION = 'project.wsgi.application'
 
 
 # Database
