@@ -5,6 +5,10 @@ See https://channels.readthedocs.io/en/latest/routing.html
 from channels.routing import route, route_class, include
 from server.ws.consumers import *
 
+print("ici")
+initializeLog("project", "project.txt", True, 10)
+LOGINFO("LOG INITIALIZED in rounting.py")
+
 apiSocket = [
 	route_class(TestJsonConsumer, path=r"^/test/"),
 	route_class(ChatConsumer, path=r"^/api/"),

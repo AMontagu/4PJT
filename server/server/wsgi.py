@@ -14,8 +14,4 @@ from server.customLogging import *
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
 
-print("ici")
-initializeLog("project", "project.txt", True, 10)
-LOGINFO("LOG INITIALIZED in wsgi")
-
 application = get_wsgi_application()

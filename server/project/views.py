@@ -3,10 +3,13 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 from django.contrib.auth import authenticate, login, logout
+from rest_framework.decorators import api_view
+
 from server.customLogging import *
 
-
+@api_view(['POST'])
 def loginUser(request):
+	print("ici login")
 	if request.method == "POST":
 		username = request.POST['username']
 		password = request.POST['password']
@@ -33,20 +36,21 @@ def loginUser(request):
 	else:
 		return HttpResponse(status=400)
 
+@api_view(['POST'])
 def signinUser(request):
+	print("ici signin")
 	if request.method == "POST":
-		email = request.POST['email']
-		username = request.POST['username']
-		password = request.POST['password']
+		print(request.data)
+		email = request.data['email']
+		username = request.data['username']
+		password = request.data['password']
 		try:
 			user = User.objects.create_user(username, email, password)
 			user.save()
 		except Exception:
 			LOGWARN("Sign in fail message :" + str(Exception))
-			return HttpResponse(status=400)
+			return HttpResponse("error create user", status=400, reason="error create user")
 		return HttpResponse(status=200)
-	else:
-		return HttpResponse(status=400)
 
 def logoutUser(request):
 	logout(request)
