@@ -1,34 +1,42 @@
+from importlib import import_module
+
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render
 
 from django.contrib.auth import authenticate, login, logout
-from rest_framework.decorators import api_view
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view, authentication_classes
 
+from project.models import QwirkUser
+from server import settings
 from server.customLogging import *
 
 @api_view(['POST'])
 def loginUser(request):
 	print("ici login")
 	if request.method == "POST":
-		username = request.POST['username']
-		password = request.POST['password']
+		username = request.data['userName']
+		password = request.data['password']
 		user = authenticate(username=username, password=password)
 		if user is not None:
-			login(request, user)
-			LOGINFO("login success with username " + username + "password " + password)
-			return HttpResponse(status=200)
+			#login(request, user)
+			LOGINFO("login success with username " + username + " password " + password)
+			token = Token.objects.create(user=user)
+			return HttpResponse(token.key, status=200)
 		else:
 			email = username
 			user = User.objects.get(email=email)
 			if user is not None:
 				user = authenticate(username=user.username, password=password)
 				if user is not None:
-					login(request, user)
-					LOGINFO("login success with username " + username + "password " + password)
-					return HttpResponse(status=200)
+					#login(request, user)
+					LOGINFO("login success with username " + username + " password " + password)
+					token = Token.objects.create(user=user)
+					return HttpResponse(token.key, status=200)
 				else:
-					LOGINFO("fail login with email " + email + "password " + password)
+					LOGINFO("fail login with email " + email + " password " + password)
 					return HttpResponse(status=400)
 			else:
 				LOGINFO("fail login with username/email " + username + " or password " + password)
@@ -42,15 +50,46 @@ def signinUser(request):
 	if request.method == "POST":
 		print(request.data)
 		email = request.data['email']
-		username = request.data['username']
+		username = request.data['userName']
 		password = request.data['password']
+
+		birthDate = None
+		bio = None
+		if 'birthDate' in request.data:
+			birthDate = request.data['birthDate']
+		if 'birthDate' in request.data:
+			bio = request.data['bio']
+
 		try:
+			# User.objects.filter(username__iexact=username).exists()
 			user = User.objects.create_user(username, email, password)
 			user.save()
-		except Exception:
-			LOGWARN("Sign in fail message :" + str(Exception))
+			qwirkUser = QwirkUser.objects.create(bio=bio, birthDate=birthDate, user=user)
+			qwirkUser.save()
+			user = authenticate(username=username, password=password)
+			if user is not None:
+				login(request, user)
+				LOGINFO("login success with username " + username + "password " + password)
+				return HttpResponse(status=200)
+			else:
+				LOGINFO("fail login with username/email " + username + " or password " + password)
+				return HttpResponse(status=400)
+		except Exception as e:
+			LOGWARN("Sign in fail message :" + str(e))
 			return HttpResponse("error create user", status=400, reason="error create user")
 		return HttpResponse(status=200)
 
+@api_view(['GET'])
 def logoutUser(request):
 	logout(request)
+
+@api_view(['POST', 'GET'])
+def isLoggedIn(request):
+	print(request.META)
+	print(request.COOKIES)
+	message = "false"
+	print(request.user)
+	if request.user.is_authenticated():
+		message = "true"
+	print(message)
+	return HttpResponse(message, status=200)

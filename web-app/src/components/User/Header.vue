@@ -1,12 +1,12 @@
 <template>
-  <div id="Home">
+  <div id="UserHeader">
 
   </div>
 </template>
 
 <script>
 export default{
-    name:"Home",
+    name:"UserHeader",
     data(){
         return{}
     },
@@ -15,7 +15,6 @@ export default{
     methods: {},
     components:{}
 }
-
 </script>
 
 <style scoped>

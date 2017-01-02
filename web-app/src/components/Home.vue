@@ -1,20 +1,20 @@
-<template>
+<template xmlns:v-on="http://www.w3.org/1999/xhtml">
   <div id="Home" class="text-center">
     <navbar></navbar>
 
     <div class="container-form">
       <div class="form-login">
         <h2 class="form-login-heading">Please Log in</h2>
-        <label for="inputEmail" class="sr-only">Email address</label>
-        <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+        <label for="inputEmail" class="sr-only">Email address or User Name</label>
+        <input type="email" id="inputEmail" class="form-control" placeholder="Email address, User name" v-model="user.userName" required autofocus>
         <label for="inputPassword" class="sr-only">Password</label>
-        <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+        <input type="password" id="inputPassword" class="form-control" placeholder="Password" v-model="user.password" required>
         <div class="checkbox">
           <label>
             <input type="checkbox" value="remember-me"> Remember me
           </label>
         </div>
-        <button class="btn btn-lg btn-primary btn-block" type="button">Log in</button>
+        <button class="btn btn-lg btn-primary btn-block" type="button" v-on:click="logIn">Log in</button>
       </div>
     </div>
   </div>
@@ -22,18 +22,38 @@
 
 <script>
 import Navbar from './shared/Navbar.vue'
+import {User} from '../../static/js/model.js';
+
 export default{
     name:"Home",
     data(){
-        return{}
+        return{
+          user: new User()
+        }
     },
-    mounted: function(){
-      let data = {email: "test@bla.com", username:"test", password:"testtest"};
-      this.$http.post('http://localhost:8000/signin/', {email: "test@bla.com", username:"test", password:"testtest"}).then(function(response){
-        console.log("sucess signin", response);
+    mounted: function(){},
+    methods: {
+      logIn: function(){
+        this.$http.post('http://localhost:8000/login/', this.user).then(function(response){
+        console.log("sucess login", response);
+        //'X-CSRFToken':getCookie('csrftoken'), 'sessionid':getCookie('sessionid')
+
+        console.log(response.body);
+
+        this.$http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + response.body}}).then(function(response){
+            console.log("sucess request", response);
+            if(response.body == "true"){
+              console.log("user is logged in");
+            }else{
+              console.log("user is NOT logged in");
+            }
+          }, function(err){
+            console.log("error :", err);
+        });
       }, function(err){
         console.log("error :", err);
       });
+      }
     },
     components:{
       Navbar

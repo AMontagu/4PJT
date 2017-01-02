@@ -16,10 +16,13 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from project import views
+from rest_framework.authtoken import views as tokenView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^login/', views.loginUser),
     url(r'^signin/', views.signinUser),
     url(r'^logout/', views.logoutUser),
+    url(r'^isloggedin/', views.isLoggedIn),
+    url(r'^api-token-auth/', tokenView.obtain_auth_token),
 ]
