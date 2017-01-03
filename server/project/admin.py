@@ -6,13 +6,27 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from project.models import QwirkUser
 
+
 class UserProfileInline(admin.TabularInline):
     model = QwirkUser
+
 
 class MyUserAdmin(UserAdmin):
     inlines = [
         UserProfileInline,
     ]
 
+
+class QwirkUserAdmin(admin.ModelAdmin):
+    list_display = ('bio', 'birthDate', 'contacts')
+    """list_filter = (
+    'robot__name', 'robot__shop__name', 'robot__shop__society__name', 'state', 'component', 'component_id',
+    'time_transfer', 'time_log')"""
+
+    def contacts(self, obj):
+        return obj.contacts
+
+
 admin.site.unregister(User)
 admin.site.register(User, MyUserAdmin)
+admin.site.register(QwirkUser)

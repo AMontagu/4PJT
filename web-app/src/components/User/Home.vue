@@ -26,9 +26,10 @@ export default{
     methods:{
       checkIfUserLoggedIn: function(){
         //TODO look into cookies
-        this.$http.get('http://localhost:8000/isloggedin/').then(function(response){
+
+        this.$http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
             console.log("sucess request", response);
-            if(response.body == "true"){
+            if(response.body == "True"){
               console.log("user is logged in");
             }else{
               console.log("user is NOT logged in");

@@ -5,18 +5,17 @@ import App from './App'
 
 import router from './router'
 let VueResource = require('vue-resource');
-
+var VueCookie = require('vue-cookie');
+// Tell Vue to use the plugin
 Vue.use(VueResource);
+Vue.use(VueCookie);
 
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
   router: router,
   http: {
-    root: '/root',
-    headers: {
-      Authorization: 'Basic YXBpOnBhc3N3b3Jk'
-    }
+    root: '/',
   },
   template: '<App/>',
   components: { App }

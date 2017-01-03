@@ -9,7 +9,10 @@
 export default{
     name:"UserNavbar",
     data(){
-        return{}
+        return{
+          groups: [],
+          contacts: []
+        }
     },
     created: function(){},
     mounted: function(){},

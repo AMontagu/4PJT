@@ -53,7 +53,7 @@ export default{
         if(this.user.checkBeforeSignIn(this.confirmPassword)){
           this.$http.post('http://localhost:8000/signin/', this.user).then(function(response){
             console.log("sucess signin", response);
-            this.$router.push('user');
+            this.$router.push('user/');
           }, function(err){
             console.log("error :", err);
           });
