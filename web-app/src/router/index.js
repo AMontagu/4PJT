@@ -24,6 +24,10 @@ export default new Router({
         {
           path: '',
           component: UserChat
+        },
+        {
+          path: ':name',
+          component: UserChat
         }
       ]
     }

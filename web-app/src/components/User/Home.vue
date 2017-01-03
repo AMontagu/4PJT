@@ -1,5 +1,5 @@
 <template>
-  <div id="UserHome">
+  <div id="UserHome" v-if="isConnected">
     <userNavbar></userNavbar>
     <div id="content">
       <userHeader></userHeader>
@@ -17,7 +17,9 @@ import UserHeader from './Header.vue'
 export default{
     name:"UserHome",
     data(){
-        return{}
+        return{
+          isConnected: false
+        }
     },
     created: function(){
       this.checkIfUserLoggedIn();
@@ -26,11 +28,12 @@ export default{
     methods:{
       checkIfUserLoggedIn: function(){
         //TODO look into cookies
-
+        let self = this;
         this.$http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
             console.log("sucess request", response);
             if(response.body == "True"){
               console.log("user is logged in");
+              self.isConnected = true;
             }else{
               console.log("user is NOT logged in");
               this.$router.push('/');
@@ -68,16 +71,25 @@ export default{
       width:100%;
   }
 
-  #UserNavbar {
-      background-color:#999;
-      width:20%;
-      height:100%;
-      float:left;
+  #UserNavbar{
+    margin: 0;
+    padding: 0;
+    width: 20%;
+    background-color: #f1f1f1;
+    height: 100%;
+    overflow: auto;
+    float:left;
+  }
+
+  #UserChat{
+    width:100%;
+    overflow: auto;
+    height: 90%;
   }
 
   #content {
       width:80%;
-      height:90%;
+      height:100%;
       background-color:#363;
       float:left;
   }
