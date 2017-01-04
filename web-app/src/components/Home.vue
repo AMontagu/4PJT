@@ -6,7 +6,7 @@
       <div class="form-login">
         <h2 class="form-login-heading">Please Log in</h2>
         <label for="inputEmail" class="sr-only">Email address or User Name</label>
-        <input type="email" id="inputEmail" class="form-control" placeholder="Email address, User name" v-model="user.userName" required autofocus>
+        <input type="email" id="inputEmail" class="form-control" placeholder="Email address, User name" v-model="user.username" required autofocus>
         <label for="inputPassword" class="sr-only">Password</label>
         <input type="password" id="inputPassword" class="form-control" placeholder="Password" v-model="user.password" required>
         <div class="checkbox">

@@ -1,6 +1,6 @@
 <template>
   <div id="UserHome" v-if="isConnected">
-    <userNavbar></userNavbar>
+    <userNavbar v-bind:qwirk-user="qwirkUser"></userNavbar>
     <div id="content">
       <userHeader></userHeader>
       <transition name="fade" mode="out-in">
@@ -13,12 +13,13 @@
 <script>
 import UserNavbar from './Navbar.vue'
 import UserHeader from './Header.vue'
-
+import {User, QwirkUser} from '../../../static/js/model.js';
 export default{
     name:"UserHome",
     data(){
         return{
-          isConnected: false
+          isConnected: false,
+          qwirkUser: new QwirkUser()
         }
     },
     created: function(){
@@ -29,18 +30,31 @@ export default{
       checkIfUserLoggedIn: function(){
         //TODO look into cookies
         let self = this;
-        this.$http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
+        if (this.$cookie.get('token') == null){
+          location.href = '/';
+        }else{
+          this.$http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
             console.log("sucess request", response);
             if(response.body == "True"){
               console.log("user is logged in");
               self.isConnected = true;
+              console.log(self.$cookie.get('token'));
+              self.$http.get('http://localhost:8000/userinfos/', {headers: {'Authorization': "Token " + self.$cookie.get('token')}}).then(function(response){
+                self.qwirkUser.copyConstructor(response.body);
+                console.log(self.qwirkUser);
+              }, function(err){
+                console.log("error :", err);
+              });
             }else{
               console.log("user is NOT logged in");
-              this.$router.push('/');
+              // TODO look cookies for username and password
+              self.$router.push('/');
             }
           }, function(err){
             console.log("error :", err);
-        });
+            location.href = '/';
+          });
+        }
       }
     },
     components:{

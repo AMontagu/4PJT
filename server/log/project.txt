@@ -222,3 +222,79 @@
 2017-01-03 14:42:19,362 (1483450939.362882) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
 2017-01-03 14:44:30,313 (1483451070.313298) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
 2017-01-03 14:46:19,644 (1483451179.644193) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 09:46:59,572 (1483519619.572441) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 10:12:17,203 (1483521137.203829) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 10:13:09,242 (1483521189.242488) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 10:13:30,831 (1483521210.831580) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 10:35:39,313 (1483522539.313621) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 10:36:25,475 (1483522585.475062) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 10:42:39,475 (1483522959.475129) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 10:57:11,868 (1483523831.868703) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:00:29,951 (1483524029.951944) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:08:18,496 (1483524498.496307) [Thread-3] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\project\views.py:76 | login success with username testpassword test
+2017-01-04 11:09:23,658 (1483524563.658827) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:09:31,866 (1483524571.866103) [Thread-4] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\project\views.py:34 | login success with username test@bla.com password test
+2017-01-04 11:27:59,405 (1483525679.405175) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:28:46,952 (1483525726.952934) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:30:12,315 (1483525812.315575) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:30:25,001 (1483525825.001367) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:31:37,012 (1483525897.012280) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:32:50,308 (1483525970.308377) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:33:02,388 (1483525982.388112) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:34:07,931 (1483526047.931805) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:34:56,669 (1483526096.669925) [Thread-5] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\project\views.py:34 | login success with username test@bla.com password test
+2017-01-04 11:35:39,944 (1483526139.944707) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 11:41:29,855 (1483526489.855546) [Thread-4] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\project\views.py:76 | login success with username test2password test2
+2017-01-04 12:06:04,328 (1483527964.328785) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:11:00,883 (1483528260.883373) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:11:44,911 (1483528304.911600) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:14:00,594 (1483528440.594141) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:14:52,203 (1483528492.203371) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:15:39,103 (1483528539.103944) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:18:25,533 (1483528705.533248) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:19:53,105 (1483528793.105874) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:20:19,901 (1483528819.901086) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:21:43,127 (1483528903.127480) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:22:20,659 (1483528940.659675) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:23:27,452 (1483529007.452465) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:23:53,699 (1483529033.699547) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:25:21,862 (1483529121.862823) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:26:41,595 (1483529201.595102) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:28:32,892 (1483529312.892906) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:29:42,071 (1483529382.071016) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:31:28,300 (1483529488.300724) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:31:57,948 (1483529517.948790) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:35:32,182 (1483529732.182871) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:35:53,533 (1483529753.533831) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:42:08,596 (1483530128.596412) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:42:23,844 (1483530143.844096) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:42:27,395 (1483530147.395516) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:45:01,722 (1483530301.722281) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 12:45:27,114 (1483530327.114297) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:17:07,294 (1483532227.294183) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:46:57,622 (1483534017.622620) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:47:32,022 (1483534052.022701) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:49:31,142 (1483534171.142021) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:50:39,919 (1483534239.919605) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:52:15,499 (1483534335.499233) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:53:04,722 (1483534384.722163) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:55:23,295 (1483534523.295554) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:57:40,353 (1483534660.353445) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:58:13,719 (1483534693.719299) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 13:58:56,903 (1483534736.903634) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:01:42,560 (1483534902.560482) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:04:08,488 (1483535048.488613) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:04:28,277 (1483535068.277751) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:08:01,991 (1483535281.991890) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:10:14,482 (1483535414.482729) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:10:44,032 (1483535444.032908) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:14:40,937 (1483535680.937979) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:15:47,682 (1483535747.682620) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:19:25,099 (1483535965.099212) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:19:29,554 (1483535969.554858) [Thread-3] [WARNING] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\project\views.py:86 | Sign in fail message :["'' value has an invalid date format. It must be in YYYY-MM-DD format."]
+2017-01-04 14:20:09,178 (1483536009.178337) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:20:12,524 (1483536012.524303) [Thread-5] [WARNING] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\project\views.py:86 | Sign in fail message :UNIQUE constraint failed: auth_user.username
+2017-01-04 14:22:55,967 (1483536175.967625) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:23:33,702 (1483536213.702068) [Thread-2] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\project\views.py:76 | login success with username test2password test2
+2017-01-04 14:24:18,167 (1483536258.167051) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py
+2017-01-04 14:30:04,191 (1483536604.191312) [Dummy-1] [INFO] |  C:\Users\adrie\Documents\Supinfo\CoursSupinfo20162017\4PJT\server\server\routing.py:10 | LOG INITIALIZED in rounting.py

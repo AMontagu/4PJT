@@ -9,9 +9,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.utils.timezone import utc
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, renderer_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.renderers import JSONRenderer
 
-from project.models import QwirkUser
+from project.models import QwirkUser, Contact
+from project.serializer import QwirkUserSerializer
 from server import settings
 from server.customLogging import *
 
@@ -20,7 +23,7 @@ from server.customLogging import *
 def loginUser(request):
 	print("ici login")
 	if request.method == "POST":
-		username = request.data['userName']
+		username = request.data['username']
 		password = request.data['password']
 		user = authenticate(username=username, password=password)
 		if user is None:
@@ -51,13 +54,13 @@ def signinUser(request):
 	print("ici signin")
 	if request.method == "POST":
 		print(request.data)
-		email = request.data['email']
-		username = request.data['userName']
-		password = request.data['password']
+		email = request.data['user']['email']
+		username = request.data['user']['username']
+		password = request.data['user']['password']
 
 		birthDate = None
 		bio = None
-		if 'birthDate' in request.data:
+		if 'birthDate' in request.data and request.data['birthDate'] != "":
 			birthDate = request.data['birthDate']
 		if 'birthDate' in request.data:
 			bio = request.data['bio']
@@ -66,7 +69,7 @@ def signinUser(request):
 			# User.objects.filter(username__iexact=username).exists()
 			user = User.objects.create_user(username, email, password)
 			user.save()
-			qwirkUser = QwirkUser.objects.create(bio=bio, birthDate=birthDate, user=user)
+			qwirkUser = QwirkUser.objects.create(bio=bio, birthDate=birthDate, user=user, status="Online")
 			qwirkUser.save()
 			user = authenticate(username=username, password=password)
 			if user is not None:
@@ -93,3 +96,41 @@ def logoutUser(request):
 def isLoggedIn(request):
 	print(request.META)
 	return HttpResponse(str(request.user.is_authenticated()), status=200)
+
+@api_view(['POST'])
+def addContact(request):
+	if request.user is not None:
+		username = request.data['username']
+		userContact = User.objects.get(username=username)
+		if userContact is None:
+			email = username
+			userContact = User.objects.get(email=email)
+		if userContact is not None:
+			newContact = Contact.objects.create(qwirkUser=userContact.qwirkuser, status="Asking")
+			newContact.save()
+			newContact2 = Contact.objects.create(qwirkUser=request.user.qwirkuser, status="Pending")
+			newContact2.save()
+			request.user.qwirkuser.contacts.add(newContact)
+			userContact.qwirkuser.contacts.add(newContact2)
+			print("added " + newContact.qwirkuser.user.username)
+			return HttpResponse("Ok", status=200)
+		else:
+			LOGINFO("No contact with this username/email " + username)
+			return HttpResponse(status=400)
+	else:
+		return HttpResponse(status=401)
+
+@api_view(['GET'])
+@renderer_classes((JSONRenderer,))
+def getUserInformations(request):
+	if request.user is not None:
+		for field in request.user._meta.fields:
+			print(field.name)
+		qwirkUser = QwirkUser.objects.get(user=request.user)
+		serializer = QwirkUserSerializer(request.user.qwirkuser)
+		print(serializer.data)
+		json = JSONRenderer().render(serializer.data)
+		print(json)
+		return HttpResponse(json, status=200)
+	else:
+		return HttpResponse(status=401)
