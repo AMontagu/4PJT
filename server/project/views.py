@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.renderers import JSONRenderer
 
-from project.models import QwirkUser, Contact
+from project.models import QwirkUser, Contact, QwirkGroup
 from project.serializer import QwirkUserSerializer
 from server import settings
 from server.customLogging import *
@@ -26,9 +26,8 @@ def loginUser(request):
 		username = request.data['username']
 		password = request.data['password']
 		user = authenticate(username=username, password=password)
-		if user is None:
-			email = username
-			user = User.objects.get(email=email)
+		if user is None and User.objects.filter(email=username):
+			user = User.objects.get(email=username)
 		if user is not None:
 			user = authenticate(username=user.username, password=password)
 			LOGINFO("login success with username " + username + " password " + password)
@@ -94,7 +93,6 @@ def logoutUser(request):
 
 @api_view(['GET'])
 def isLoggedIn(request):
-	print(request.META)
 	return HttpResponse(str(request.user.is_authenticated()), status=200)
 
 @api_view(['POST'])
@@ -106,14 +104,19 @@ def addContact(request):
 			email = username
 			userContact = User.objects.get(email=email)
 		if userContact is not None:
-			newContact = Contact.objects.create(qwirkUser=userContact.qwirkuser, status="Asking")
-			newContact.save()
-			newContact2 = Contact.objects.create(qwirkUser=request.user.qwirkuser, status="Pending")
-			newContact2.save()
-			request.user.qwirkuser.contacts.add(newContact)
-			userContact.qwirkuser.contacts.add(newContact2)
-			print("added " + newContact.qwirkuser.user.username)
-			return HttpResponse("Ok", status=200)
+			if request.user.qwirkuser.contacts.filter(qwirkUser=userContact.qwirkuser).exists():
+				print("user have already this user as contact")
+				return HttpResponse("Already in contact", status=200)
+			else:
+				group = QwirkGroup.objects.create(name=userContact.username+"+"+request.user.username, private=True)
+				newContact = Contact.objects.create(qwirkUser=userContact.qwirkuser, status="Asking", qwirkGroup=group)
+				newContact.save()
+				newContact2 = Contact.objects.create(qwirkUser=request.user.qwirkuser, status="Pending", qwirkGroup=group)
+				newContact2.save()
+				request.user.qwirkuser.contacts.add(newContact)
+				userContact.qwirkuser.contacts.add(newContact2)
+				print("added " + newContact.qwirkUser.user.username)
+				return HttpResponse(group.name, status=200)
 		else:
 			LOGINFO("No contact with this username/email " + username)
 			return HttpResponse(status=400)
@@ -124,13 +127,12 @@ def addContact(request):
 @renderer_classes((JSONRenderer,))
 def getUserInformations(request):
 	if request.user is not None:
-		for field in request.user._meta.fields:
-			print(field.name)
-		qwirkUser = QwirkUser.objects.get(user=request.user)
+		"""for field in request.user._meta.fields:
+			print(field.name)"""
+		#qwirkUser = QwirkUser.objects.get(user=request.user)
 		serializer = QwirkUserSerializer(request.user.qwirkuser)
-		print(serializer.data)
 		json = JSONRenderer().render(serializer.data)
-		print(json)
+		#print(json)
 		return HttpResponse(json, status=200)
 	else:
 		return HttpResponse(status=401)

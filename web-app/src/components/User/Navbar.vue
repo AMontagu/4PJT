@@ -8,33 +8,31 @@
       <button type="button" class="btn btn-action" v-on:click="addContact">Add</button>
     </div>
     <div class="chatKind">
-      <h3>Groups</h3>
+      <h3>Contacts</h3>
       <ul class="leftNavbar">
-        <router-link v-for="group in groups" tag="li" :to="group | groupPath">
-          <a>{{group}}</a>
-        </router-link>
+        <li v-for="contact in qwirkUser.contacts" v-on:click="changeGroupName(contact.qwirkGroup.name)">
+          <a>{{ contact.qwirkUser.user.username }}</a>
+        </li>
       </ul>
     </div>
     <div class="chatKind">
-      <h3>Contacts</h3>
+      <h3>Groups</h3>
       <ul class="leftNavbar">
-        <router-link v-for="contact in contacts" tag="li" :to="contact | contactPath">
-          <a>{{ contact }}</a>
+        <router-link v-for="group in qwirkUser.qwirkGroups" tag="li" :to="group.name | groupPath">
+          <a>{{ group.name }}</a>
         </router-link>
       </ul>
     </div>
-
   </div>
 </template>
 
 <script>
 export default{
     name:"UserNavbar",
-    props: ['qwirkUser'],
+    props: ['qwirkUser', 'currentGroupName'],
     data(){
         return{
           groups: ["test", "test2", "test", "test2", "test", "test2"],
-          contacts: ["test", "test2"],
           searchBarText: ""
         }
     },
@@ -42,23 +40,19 @@ export default{
     mounted: function(){},
     methods: {
       addContact: function(){
-        let username = this.searchBarText;
-        console.log("token " + this.$cookie.get('token'));
-        this.$http.post('http://localhost:8000/addcontact/', {'username': username}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
+        self = this;
+        let username = self.searchBarText;
+        console.log("token " + self.$cookie.get('token'));
+        self.$http.post('http://localhost:8000/addcontact/', {'username': username}, {headers: {'Authorization': "Token " + self.$cookie.get('token')}}).then(function(response){
           console.log("sucess add contact", response);
-          this.$router.push('user/' + username);
+          self.currentGroupName = response.body;
         }, function(err){
           console.log("error :", err);
         });
-
-      }
-    },
-    filters: {
-      groupPath: function (name) {
-        return '/user/' + name;
       },
-      contactPath: function (name) {
-        return '/user/' + name;
+      changeGroupName: function(groupName){
+        console.log(groupName);
+        this.currentGroupName = groupName;
       }
     },
     watch: {

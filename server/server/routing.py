@@ -3,15 +3,10 @@ See https://channels.readthedocs.io/en/latest/routing.html
 """
 
 from channels.routing import route, route_class, include
-from server.ws.consumers import *
-
-print("ici")
-initializeLog("project", "project.txt", True, 10)
-LOGINFO("LOG INITIALIZED in rounting.py")
+from project.consumers import *
 
 apiSocket = [
-	route_class(TestJsonConsumer, path=r"^/test/"),
-	route_class(ChatConsumer, path=r"^/api/"),
+	route_class(ChatJsonConsumer, path=r"^/chat/(?P<token>[0-9A-Za-z]+)/(?P<groupname>[0-9A-Za-z-]+)"),
 	route("websocket.connect", ws_add),  # default for getting connection not in hease protocol remove in release
 	route("websocket.receive", ws_message),  # default for getting message not in hease protocol remove in release
 	route("websocket.disconnect", ws_disconnect),
