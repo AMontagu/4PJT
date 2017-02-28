@@ -1,3 +1,6 @@
 .navbar{
   background-color: transparent;
 }
+html{
+  font-size: 100%;
+}

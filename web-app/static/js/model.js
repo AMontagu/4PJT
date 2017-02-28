@@ -2,6 +2,13 @@
  * Created by adrie on 02/01/2017.
  */
 
+class QwirkGroup{
+  constructor() {
+    this.name = "";
+    this.private = true;
+  }
+}
+
 class User{
   constructor() {
     this.username = "";
@@ -66,4 +73,26 @@ class QwirkUser{
   }
 }
 
-export { User, QwirkUser };
+class Message{
+  constructor() {
+    this.qwirkUser = new QwirkUser();
+    this.qwirkGroup = new QwirkGroup();
+    this.text = "";
+    this.dateTime = new Date();
+  }
+
+  /*copyConstructor(object){
+    if(typeof object == "string"){
+      object = JSON.parse(object);
+    }
+    console.log(object);
+    this.user = object.user;
+    this.bio = object.bio;
+    this.birthDate = object.birthDate;
+    this.qwirkGroups = object.qwirkGroups;
+    this.contacts = object.contacts;
+  }*/
+
+}
+
+export { User, QwirkUser, QwirkGroup, Message };

@@ -26,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
 
-class QwirkUserSerializerForContact(serializers.ModelSerializer):
+class QwirkUserSerializerSimple(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
     class Meta:
@@ -36,7 +36,7 @@ class QwirkUserSerializerForContact(serializers.ModelSerializer):
 
 
 class ContactSerializer(serializers.ModelSerializer):
-    qwirkUser = QwirkUserSerializerForContact(read_only=True)
+    qwirkUser = QwirkUserSerializerSimple(read_only=True)
     qwirkGroup = QwirkGroupSerializer(read_only=True)
 
     class Meta:
@@ -52,3 +52,13 @@ class QwirkUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = QwirkUser
         fields = ('user', 'bio', 'birthDate', 'qwirkGroups', 'contacts')
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    qwirkGroup = QwirkGroupSerializer(read_only=True)
+    qwirkUser = QwirkUserSerializerSimple(read_only=True)
+
+    class Meta:
+        model = Message
+        fields = ('qwirkUser', 'qwirkGroup', 'text', 'dateTime')
+

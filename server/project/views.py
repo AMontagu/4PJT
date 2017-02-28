@@ -108,7 +108,7 @@ def addContact(request):
 				print("user have already this user as contact")
 				return HttpResponse("Already in contact", status=200)
 			else:
-				group = QwirkGroup.objects.create(name=userContact.username+"+"+request.user.username, private=True)
+				group = QwirkGroup.objects.create(name=userContact.username+"-"+request.user.username, private=True)
 				newContact = Contact.objects.create(qwirkUser=userContact.qwirkuser, status="Asking", qwirkGroup=group)
 				newContact.save()
 				newContact2 = Contact.objects.create(qwirkUser=request.user.qwirkuser, status="Pending", qwirkGroup=group)

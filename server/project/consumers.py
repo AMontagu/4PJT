@@ -8,13 +8,17 @@ See https://github.com/EvotionTeam/hease-robot/wiki/WebSocket-communication
 import base64
 import datetime
 
+from django.core import serializers
 from django.http import HttpResponse
 from channels.handler import AsgiHandler
 from channels.generic.websockets import WebsocketConsumer, JsonWebsocketConsumer, BaseConsumer
 from django.utils.timezone import utc
 from rest_framework.authtoken.models import Token
 from channels import Group
+from project.models import QwirkGroup, Contact, QwirkUser, Message
 import json
+
+from project.serializer import MessageSerializer
 
 
 def checkToken(url):
@@ -23,22 +27,35 @@ def checkToken(url):
 			token = Token.objects.select_related('user').get(key=url["token"])
 		except Token.DoesNotExist:
 			print("invalid token in url")
-			return False
+			return False, None
 
 		if not token.user.is_active:
 			print("invalid token User inactive or deleted.")
-			return False
+			return False, None
 
 		utc_now = datetime.datetime.utcnow().replace(tzinfo=utc)
 
 		if token.created < utc_now - datetime.timedelta(hours=24):
 			print("Token has expired")
-			return False
+			return False, None
 		print("user " + token.user.username)
-		return True
+
+		if "groupname" in url:
+			groupName = url["groupname"]
+			print("connection to group " + groupName)
+			if QwirkGroup.objects.filter(name=groupName).exists():
+				contactRelationExist = Contact.objects.filter(qwirkGroup__name=groupName,
+				                                              qwirkUser=token.user.qwirkuser).exists()  # Check if the current user logged in with token is a contact of the group he try to connect
+				print("contactRelationExist: " + str(contactRelationExist))
+				userIsInGroup = QwirkUser.objects.filter(groups__name=groupName).exists()
+				print("userIsInGroup: " + str(userIsInGroup))
+				if contactRelationExist or userIsInGroup:
+					return True, token.user
+
+		return False, None
 	else:
 		print("No token in url")
-		return False
+		return False, None
 
 class ChatJsonConsumer(JsonWebsocketConsumer):
 	"""
@@ -53,15 +70,12 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 
 	def connection_groups(self, **kwargs):
 		print("connection Chat groups json")
-		if "groupname" in kwargs:
-			print("connection to group" + kwargs["groupname"])
-			return [kwargs["groupname"]]
-		else:
-			print("no groupname in url")
+		return [kwargs["groupname"]]
 
 	def connect(self, message, **kwargs):
 		print("connect Chat json")
-		if not checkToken(kwargs):
+		goodTokenAndUserInGroup, user = checkToken(kwargs)
+		if not goodTokenAndUserInGroup:
 			print("not-authorized connection")
 			text = {
 				"action": "not-authorized-connection",
@@ -75,16 +89,37 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 		print(content)
 
 		if "groupname" in kwargs:
-			text = json.dumps({
-				"action": "message",
-				"message": content["text"],
-			})
-			"""Group(kwargs["groupname"]).send({
-				"text": text,
-			})"""
-			Group(kwargs["groupname"]).send({
-				"text": text,
-			})
+
+			goodTokenAndUserInGroup, user = checkToken(kwargs)
+
+			if goodTokenAndUserInGroup:
+
+				if content["action"] == "message":
+					qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"]) # TODO check with exist or with try catch but not sur because check in connect need to be tested
+
+					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"])
+					message.save()
+
+					messageSerialized = MessageSerializer(message)
+
+					text = json.dumps({
+						"action": "new-message",
+						"content": json.dumps(messageSerialized.data)
+					})
+					Group(kwargs["groupname"]).send({
+						"text": text,
+					})
+				elif content["action"] == "get-message":
+					messages = Message.objects.order_by("-dateTime")[int(content["content"]["startMessage"]):int(content["content"]["endMessage"])]
+					messageToSend = list()
+					for message in messages:
+						messageToSend.append(MessageSerializer(message).data)
+					# print(messageToSend)
+					text = {
+						"action": "saved-messages",
+						"content": json.dumps(messageToSend)
+					}
+					self.send(text)
 		else:
 			print("no groupname in url")
 

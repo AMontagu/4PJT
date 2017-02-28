@@ -32,7 +32,7 @@ class Contact(models.Model):
 
 
 class Message(models.Model):
-    user = models.ForeignKey(QwirkUser, on_delete=models.CASCADE)
-    group = models.ForeignKey(QwirkGroup, on_delete=models.CASCADE)
+    qwirkUser = models.ForeignKey(QwirkUser, on_delete=models.CASCADE)
+    qwirkGroup = models.ForeignKey(QwirkGroup, on_delete=models.CASCADE)
     text = models.TextField()
     dateTime = models.DateTimeField(auto_now=True)

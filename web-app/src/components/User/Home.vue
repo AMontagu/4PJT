@@ -154,7 +154,7 @@ export default{
   #content {
       width:80%;
       height:100%;
-      background-color:#363;
+      background-color: white;
       float:left;
   }
 
