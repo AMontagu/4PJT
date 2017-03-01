@@ -14,6 +14,8 @@ class User{
     this.username = "";
     this.email = "";
     this.password = "";
+    this.firstname = "";
+    this.lastname = "";
   }
 
   checkBeforeSignIn(confirmPassword){

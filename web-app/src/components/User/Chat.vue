@@ -36,7 +36,7 @@ export default{
     },
     created: function(){},
     mounted: function(){
-      self = this;
+      let self = this;
       console.log(this.$route.params);
       self.currentGroupName = this.$route.params.name;
       if(self.currentGroupName != "" && self.currentGroupName != undefined){
@@ -80,7 +80,7 @@ export default{
         console.log("ERROR : ", err);
       },
       socketMessage: function(message){
-        self = this;
+        let self = this;
         var data = JSON.parse(message.data);
         console.log(data);
         if(data.action == "new-message"){

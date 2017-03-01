@@ -2,7 +2,16 @@
   <div id="UserHome" v-if="isConnected">
     <div id="UserNavbar">
       <div id="userPart">
-        <h3>{{ qwirkUser.user.username }}</h3>
+        <!-- Split button -->
+        <div class="btn-group">
+          <button type="button" id="userNameBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn">{{ qwirkUser.user.username }} <span class="glyphicon glyphicon-chevron-down marginL20p" aria-hidden="true"></span></button>
+          <ul class="dropdown-menu">
+            <li><a href="/user/profile">Profile & Account</a></li>
+            <li><a v-on:click="changeConnectionStatus()">Change connection status</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a v-on:click="logOut()">Log Out</a></li>
+          </ul>
+        </div>
       </div>
       <div id="searchPart">
         <input type="text" class="inputText inputSearch" placeholder="username" v-model="searchBarText"/>
@@ -27,15 +36,16 @@
     </div>
     <div id="content">
       <userHeader></userHeader>
-      <transition name="fade" mode="out-in">
-        <router-view class="view"></router-view>
-      </transition>
+      <div class="activeView">
+        <transition name="fade" mode="out-in">
+          <router-view class="view"></router-view>
+        </transition>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import UserNavbar from './Navbar.vue'
 import UserHeader from './Header.vue'
 import UserChat from './Chat.vue'
 import {User, QwirkUser} from '../../../static/js/model.js';
@@ -93,6 +103,14 @@ export default{
         }, function(err){
           console.log("error :", err);
         });
+      },
+      logOut: function(){
+        this.$cookie.delete('token');
+        //console.log(this.$cookie.get('token'))
+        this.$router.push('/');
+      },
+      changeConnectionStatus: function(){
+        console.log("user want to change it's connection status")
       }
     },
     filters: {
@@ -106,7 +124,6 @@ export default{
       }
     },
     components:{
-      UserNavbar,
       UserHeader,
       UserChat
     }
@@ -144,10 +161,17 @@ export default{
     float:left;
   }
 
-  #UserChat{
+  .activeView{
     width:100%;
     overflow: auto;
     height: 90%;
+    position: relative;
+  }
+
+  #UserChat{
+    width:100%;
+    overflow: auto;
+    height: 100%;
     position: relative;
   }
 
@@ -156,6 +180,29 @@ export default{
       height:100%;
       background-color: white;
       float:left;
+  }
+
+  #userPart{
+    text-align: left;
+
+  }
+
+  #userPart{
+    text-align: left;
+
+  }
+
+  #userPart .btn-group{
+    width: 90%;
+    margin-left: 10%;
+  }
+
+  #userNameBtn{
+    font-size: 1.45rem;
+    text-align: left;
+    padding-top: 1rem;
+    padding-left: 1.7rem;
+    margin-bottom: 1rem;
   }
 
   .chatKind{

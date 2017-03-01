@@ -75,13 +75,14 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 	def connect(self, message, **kwargs):
 		print("connect Chat json")
 		goodTokenAndUserInGroup, user = checkToken(kwargs)
-		if not goodTokenAndUserInGroup:
+		if goodTokenAndUserInGroup:
+			self.message.reply_channel.send({"accept": True})
+		else:
 			print("not-authorized connection")
 			text = {
 				"action": "not-authorized-connection",
 			}
-			self.send(text)
-			self.close()
+			self.message.reply_channel.send({"close": True})
 
 
 	def receive(self, content, **kwargs):

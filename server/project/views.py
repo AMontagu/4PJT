@@ -56,6 +56,8 @@ def signinUser(request):
 		email = request.data['user']['email']
 		username = request.data['user']['username']
 		password = request.data['user']['password']
+		lastname = request.data['user']['lastname']
+		firstname = request.data['user']['firstname']
 
 		birthDate = None
 		bio = None
@@ -67,6 +69,8 @@ def signinUser(request):
 		try:
 			# User.objects.filter(username__iexact=username).exists()
 			user = User.objects.create_user(username, email, password)
+			user.first_name = firstname
+			user.last_name = lastname
 			user.save()
 			qwirkUser = QwirkUser.objects.create(bio=bio, birthDate=birthDate, user=user, status="Online")
 			qwirkUser.save()

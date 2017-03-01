@@ -10,6 +10,7 @@ import SignIn from '../components/SignIn.vue'
 
 import UserHome from '../components/User/Home.vue'
 import UserChat from '../components/User/Chat.vue'
+import UserProfile from '../components/User/Profile.vue'
 
 Vue.use(Router);
 
@@ -24,6 +25,10 @@ export default new Router({
         {
           path: '',
           component: UserChat
+        },
+        {
+          path: 'profile',
+          component: UserProfile
         },
         {
           path: ':name',
