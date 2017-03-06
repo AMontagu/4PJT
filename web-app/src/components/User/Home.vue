@@ -19,19 +19,33 @@
       </div>
       <div class="chatKind">
         <h3>Contacts</h3>
-        <ul class="leftNavbar">
-          <router-link v-for="contact in qwirkUser.contacts" tag="li" :to="contact.qwirkGroup.name | groupPath">
-            <a>{{ contact.qwirkUser.user.username }}</a>
-          </router-link>
-        </ul>
+        <div class="leftNavbar">
+          <div v-for="contact in qwirkUser.contacts">
+            <router-link :to="contact.qwirkGroup.name | groupPath">{{ contact.qwirkUser.user.username }}</router-link>
+          </div>
+        </div>
       </div>
       <div class="chatKind">
-        <h3>Groups</h3>
-        <ul class="leftNavbar">
-          <router-link v-for="group in qwirkUser.qwirkGroups" tag="li" :to="group.name | groupPath">
-            <a>{{ group.name }}</a>
-          </router-link>
-        </ul>
+        <div class="titleChatKind">
+          <h3>Groups</h3>
+          <span class="glyphicon glyphicon-plus" aria-hidden="true" v-on:click="showAddGroup()"></span>
+        </div>
+        <div class="leftNavbar">
+          <div v-for="group in qwirkUser.qwirkGroups" v-if="group.private">
+            <router-link :to="group.name | groupPath">{{ group.name }}</router-link>
+          </div>
+        </div>
+      </div>
+      <div class="chatKind">
+        <div class="titleChatKind">
+          <h3>Channels</h3>
+          <span class="glyphicon glyphicon-plus" aria-hidden="true" v-on:click="showAddChannel()"></span>
+        </div>
+        <div class="leftNavbar">
+          <div v-for="group in qwirkUser.qwirkGroups" v-if="!group.private">
+            <router-link :to="group.name | groupPath">{{ group.name }}</router-link>
+          </div>
+        </div>
       </div>
     </div>
     <div id="content">
@@ -42,12 +56,35 @@
         </transition>
       </div>
     </div>
+
+    <modal v-if="showModal" @close="showModal = false">
+      <h3 slot="header">Create {{modalHeader}}</h3>
+      <div slot="body">
+        <label for="inputCreate">Name *</label>
+        <input type="text" class="form-control" v-model="groupName" id="inputCreate"/>
+
+        <label for="inputPrivate">Private ?</label>
+        <input type="checkbox" v-model="createPrivateGroup" id="inputPrivate"/>
+      </div>
+
+
+      <div slot="footer">
+        <button class="modal-default-button" @click="showModal = false">
+          Close
+        </button>
+        <button class="modal-default-button" v-on:click="createGroup()">
+          Create
+        </button>
+      </div>
+    </modal>
   </div>
 </template>
+
 
 <script>
 import UserHeader from './Header.vue'
 import UserChat from './Chat.vue'
+import Modal from '../shared/Modal.vue'
 import {User, QwirkUser} from '../../../static/js/model.js';
 export default{
     name:"UserHome",
@@ -55,7 +92,11 @@ export default{
         return{
           isConnected: false,
           qwirkUser: new QwirkUser(),
-          searchBarText: ""
+          searchBarText: "",
+          showModal: false,
+          modalHeader: "",
+          createPrivateGroup: true,
+          groupName: ""
         }
     },
     created: function(){
@@ -79,6 +120,7 @@ export default{
                 self.qwirkUser.copyConstructor(response.body);
                 console.log(self.qwirkUser);
                 console.log(self.qwirkUser.contacts[0]);
+                console.log(self.qwirkUser.qwirkGroups);
               }, function(err){
                 console.log("error :", err);
               });
@@ -111,6 +153,30 @@ export default{
       },
       changeConnectionStatus: function(){
         console.log("user want to change it's connection status")
+      },
+      showAddGroup: function(){
+        this.modalHeader = "group";
+        this.createPrivateGroup = true;
+        this.showModal = true;
+      },
+      showAddChannel: function(){
+        this.modalHeader = "channel";
+        this.createPrivateGroup = false;
+        this.showModal = true;
+      },
+      createGroup: function(){
+        // TODO check if name exist
+        let self = this;
+        let data = {groupName: this.groupName, isPrivate: this.createPrivateGroup};
+        this.$http.post('http://localhost:8000/creategroup/', data, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
+          console.log("sucess create group", response);
+          // TODO display message that said your modifications was good taken
+          self.showModal = false;
+          self.$router.push(self.groupName);
+          self.showModal = false;
+        }, function(err){
+          console.log("error :", err);
+        });
       }
     },
     filters: {
@@ -125,7 +191,8 @@ export default{
     },
     components:{
       UserHeader,
-      UserChat
+      UserChat,
+      Modal
     }
 }
 
@@ -209,6 +276,16 @@ export default{
     width:100%;
 
   }
+
+  .titleChatKind h3{
+    display: inline-block;
+  }
+
+  .titleChatKind span{
+    font-size: 18px;
+    margin-left: 10px;
+  }
+
   .leftNavbar {
     list-style-type: none;
     margin: 0;
