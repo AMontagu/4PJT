@@ -14,8 +14,19 @@ class User{
     this.username = "";
     this.email = "";
     this.password = "";
-    this.firstname = "";
-    this.lastname = "";
+    this.first_name = "";
+    this.last_name = "";
+  }
+
+  copyConstructor(object){
+    if(typeof object == "string"){
+      object = JSON.parse(object);
+    }
+    //console.log(object);
+    this.username = object.username;
+    this.email = object.email;
+    this.first_name = object.first_name;
+    this.last_name = object.last_name;
   }
 
   checkBeforeSignIn(confirmPassword){
@@ -24,7 +35,7 @@ class User{
   }
 
   checkBeforeLogin(){
-    return !(this.userName == undefined || this.userName == "" || this.password == undefined || this.password == "");
+    return !(this.username == undefined || this.username == "" || this.password == undefined || this.password == "");
 
   }
 }
@@ -43,7 +54,9 @@ class QwirkUser{
       object = JSON.parse(object);
     }
     console.log(object);
-    this.user = object.user;
+    this.user.copyConstructor(object.user);
+    //this.user = object.user;
+    //console.log(this.user);
     this.bio = object.bio;
     this.birthDate = object.birthDate;
     this.qwirkGroups = object.qwirkGroups;

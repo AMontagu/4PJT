@@ -21,5 +21,5 @@ class ExpiringTokenAuthentication(TokenAuthentication):
         if token.created < utc_now - datetime.timedelta(hours=24):
             print("Token has expired")
             raise exceptions.AuthenticationFailed('Token has expired')
-        #print("user " + token.user.username)
+        # print("user " + token.user.username)
         return token.user, token

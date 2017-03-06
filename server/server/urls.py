@@ -26,5 +26,7 @@ urlpatterns = [
     url(r'^isloggedin/', views.isLoggedIn),
     url(r'^addcontact/', views.addContact),
     url(r'^userinfos/', views.getUserInformations),
+    url(r'^simpleuserinfos/', views.getSimpleUserInformations),
+    url(r'^useredit/', views.editUser),
     url(r'^api-token-auth/', tokenView.obtain_auth_token),
 ]

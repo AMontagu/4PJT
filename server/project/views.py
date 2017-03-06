@@ -1,6 +1,7 @@
 from datetime import datetime
 from importlib import import_module
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -14,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.renderers import JSONRenderer
 
 from project.models import QwirkUser, Contact, QwirkGroup
-from project.serializer import QwirkUserSerializer
+from project.serializer import QwirkUserSerializer, QwirkUserSerializerSimple
 from server import settings
 from server.customLogging import *
 
@@ -56,8 +57,8 @@ def signinUser(request):
 		email = request.data['user']['email']
 		username = request.data['user']['username']
 		password = request.data['user']['password']
-		lastname = request.data['user']['lastname']
-		firstname = request.data['user']['firstname']
+		lastname = request.data['user']['last_name']
+		firstname = request.data['user']['first_name']
 
 		birthDate = None
 		bio = None
@@ -88,6 +89,46 @@ def signinUser(request):
 		except Exception as e:
 			LOGWARN("Sign in fail message :" + str(e))
 			return HttpResponse("error create user", status=400, reason="error create user")
+
+
+@api_view(['POST'])
+def editUser(request):
+	print("ici edit user")
+	if request.user is not None:
+		# TODO useless delete this
+		if request.method == "POST":
+			print(request.data)
+			email = request.data['user']['email']
+			lastname = request.data['user']['last_name']
+			firstname = request.data['user']['first_name']
+
+			print("lastname = " + lastname)
+			print("firstname = " + firstname)
+
+			birthDate = None
+			bio = None
+			if 'birthDate' in request.data and request.data['birthDate'] != "":
+				birthDate = request.data['birthDate']
+			if 'birthDate' in request.data:
+				bio = request.data['bio']
+
+			try:
+				user = request.user
+				user.first_name = firstname
+				user.last_name = lastname
+				user.email = email
+				user.save()
+				print(user)
+				"""qwirkUser = request.user.qwirkuser
+				qwirkUser.bio = bio
+				qwirkUser.birthDate = birthDate
+				qwirkUser.save()"""
+			except Exception as e:
+				LOGWARN("edit fail message :" + str(e))
+				return HttpResponse("error create user", status=400, reason="error edit user")
+			return HttpResponse(status=200)
+	else:
+		return HttpResponse(status=401)
 
 
 @api_view(['GET'])
@@ -135,6 +176,21 @@ def getUserInformations(request):
 			print(field.name)"""
 		#qwirkUser = QwirkUser.objects.get(user=request.user)
 		serializer = QwirkUserSerializer(request.user.qwirkuser)
+		json = JSONRenderer().render(serializer.data)
+		#print(json)
+		return HttpResponse(json, status=200)
+	else:
+		return HttpResponse(status=401)
+
+
+@api_view(['GET'])
+@renderer_classes((JSONRenderer,))
+def getSimpleUserInformations(request):
+	if request.user is not None:
+		"""for field in request.user._meta.fields:
+			print(field.name)"""
+		#qwirkUser = QwirkUser.objects.get(user=request.user)
+		serializer = QwirkUserSerializerSimple(request.user.qwirkuser)
 		json = JSONRenderer().render(serializer.data)
 		#print(json)
 		return HttpResponse(json, status=200)

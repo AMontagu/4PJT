@@ -8,9 +8,9 @@
         <label for="inputUserName" class="sr-only">User Name *</label>
         <input type="text" id="inputUserName" class="form-control" placeholder="User Name" v-model="qwirkUser.user.username" required autofocus>
         <label for="inputFirstName" class="sr-only">First Name *</label>
-        <input type="text" id="inputFirstName" class="form-control" placeholder="First Name" v-model="qwirkUser.user.firstname" required autofocus>
+        <input type="text" id="inputFirstName" class="form-control" placeholder="First Name" v-model="qwirkUser.user.first_name" required autofocus>
         <label for="inputLastName" class="sr-only">Last Name *</label>
-        <input type="text" id="inputLastName" class="form-control" placeholder="Last Name" v-model="qwirkUser.user.lastname" required autofocus>
+        <input type="text" id="inputLastName" class="form-control" placeholder="Last Name" v-model="qwirkUser.user.last_name" required autofocus>
         <label for="inputEmail" class="sr-only">Email address *</label>
         <input type="email" id="inputEmail" class="form-control" placeholder="Email address" v-model="qwirkUser.user.email" required>
         <label for="inputPassword" class="sr-only">Password *</label>

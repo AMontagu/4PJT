@@ -47,3 +47,5 @@
 server/.idea/misc.xml
 server/.idea/modules.xml
 server/.idea/server.iml
+server/log/ProjectWS.txt
+web-app/.idea/inspectionProfiles/Project_Default.xml
