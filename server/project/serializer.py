@@ -13,7 +13,7 @@ class QwirkGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QwirkGroup
-        fields = ('id', 'name', 'private')
+        fields = ('id', 'name', 'isPrivate', 'isContactGroup')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -31,7 +31,7 @@ class QwirkUserSerializerSimple(serializers.ModelSerializer):
 
     class Meta:
         model = QwirkUser
-        fields = ('user', 'bio', 'birthDate')
+        fields = ('user', 'bio', 'birthDate', 'status')
         depth = 1
 
 
@@ -51,7 +51,7 @@ class QwirkUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QwirkUser
-        fields = ('user', 'bio', 'birthDate', 'qwirkGroups', 'contacts')
+        fields = ('user', 'bio', 'birthDate', 'qwirkGroups', 'contacts', 'status')
 
 
 class MessageSerializer(serializers.ModelSerializer):

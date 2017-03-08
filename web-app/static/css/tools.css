@@ -1186,6 +1186,22 @@ form label{
   background-color: green;
 }
 
+.green{
+  background-color: green;
+}
+
+.grey{
+  background-color: grey;
+}
+
+.red{
+  background-color: red;
+}
+
+.orange{
+  background-color: orange;
+}
+
 #fixErrorContainer{
   margin: auto;
   position: fixed;

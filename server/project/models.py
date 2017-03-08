@@ -4,7 +4,7 @@ from django.db import models
 
 class QwirkGroup(models.Model):
     name = models.CharField(max_length=20, unique=True)
-    private = models.BooleanField()
+    isPrivate = models.BooleanField()
     isContactGroup = models.BooleanField()
     admin = models.ManyToManyField('QwirkUser')
 

@@ -31,7 +31,7 @@
           <span class="glyphicon glyphicon-plus" aria-hidden="true" v-on:click="showAddGroup()"></span>
         </div>
         <div class="leftNavbar">
-          <div v-for="group in qwirkUser.qwirkGroups" v-if="group.private">
+          <div v-for="group in qwirkUser.qwirkGroups" v-if="group.isPrivate">
             <router-link :to="group.name | groupPath">{{ group.name }}</router-link>
           </div>
         </div>
@@ -42,7 +42,7 @@
           <span class="glyphicon glyphicon-plus" aria-hidden="true" v-on:click="showAddChannel()"></span>
         </div>
         <div class="leftNavbar">
-          <div v-for="group in qwirkUser.qwirkGroups" v-if="!group.private">
+          <div v-for="group in qwirkUser.qwirkGroups" v-if="!group.isPrivate">
             <router-link :to="group.name | groupPath">{{ group.name }}</router-link>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default{
           location.href = '/';
         }else{
           this.$http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
-            console.log("sucess request", response);
+            console.log("sucess request isloggedin", response);
             if(response.body == "True"){
               console.log("user is logged in");
               self.isConnected = true;
@@ -206,16 +206,17 @@ export default{
   }
 
   #UserHome {
-      width:100%;
-      height:100%;
+      width: 100%;
+      height: 100%;
       margin: 0px;
       padding: 0px;
   }
 
   #UserHeader {
-      height:10%;
-      background-color:#930;
-      width:100%;
+      height: 10%;
+      background-color: white;
+      width: 100%;
+      border-bottom: 1px solid grey;
   }
 
   #UserNavbar{

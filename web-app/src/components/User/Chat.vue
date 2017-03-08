@@ -40,21 +40,21 @@ export default{
       console.log(this.$route.params);
       self.currentGroupName = this.$route.params.name;
       if(self.currentGroupName != "" && self.currentGroupName != undefined){
-          var wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-          self.socket = new WebSocket(wsProtocol + "localhost:8000/ws/chat/" + self.$cookie.get('token') + "/" + self.currentGroupName);
+        var wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        self.socket = new WebSocket(wsProtocol + "localhost:8000/ws/chat/" + self.$cookie.get('token') + "/" + self.currentGroupName);
 
-          self.socket.onmessage = function (message) {
-            self.socketMessage(message);
-          }
-
-          self.socket.onopen = function () {
-            self.socketOpen();
-          };
-
-          self.socket.onerror = function (err) {
-            self.socketError(err);
-          };
+        self.socket.onmessage = function (message) {
+          self.socketMessage(message);
         }
+
+        self.socket.onopen = function () {
+          self.socketOpen();
+        };
+
+        self.socket.onerror = function (err) {
+          self.socketError(err);
+        };
+      }
     },
     methods: {
       scrollUpdated: function(){

@@ -55,6 +55,7 @@ def signinUser(request):
 	if request.method == "POST":
 		print(request.data)
 		email = request.data['user']['email']
+		# TODO check username for special charactere
 		username = request.data['user']['username']
 		password = request.data['user']['password']
 		lastname = request.data['user']['last_name']
@@ -153,7 +154,7 @@ def addContact(request):
 				print("user have already this user as contact")
 				return HttpResponse("Already in contact", status=200)
 			else:
-				qwirkGroup = QwirkGroup(name=userContact.username+"-"+request.user.username, private=True, isContactGroup=True)
+				qwirkGroup = QwirkGroup(name=userContact.username+"-"+request.user.username, isPrivate=True, isContactGroup=True)
 				qwirkGroup.save()
 				qwirkGroup.admin.add(request.user.qwirkuser)
 				qwirkGroup.admin.add(userContact.qwirkuser)
@@ -181,7 +182,7 @@ def getUserInformations(request):
 		#qwirkUser = QwirkUser.objects.get(user=request.user)
 		serializer = QwirkUserSerializer(request.user.qwirkuser)
 		json = JSONRenderer().render(serializer.data)
-		print(json)
+		# print(json)
 		return HttpResponse(json, status=200)
 	else:
 		return HttpResponse(status=401)
@@ -193,10 +194,10 @@ def getSimpleUserInformations(request):
 	if request.user is not None:
 		"""for field in request.user._meta.fields:
 			print(field.name)"""
-		#qwirkUser = QwirkUser.objects.get(user=request.user)
+		# qwirkUser = QwirkUser.objects.get(user=request.user)
 		serializer = QwirkUserSerializerSimple(request.user.qwirkuser)
 		json = JSONRenderer().render(serializer.data)
-		#print(json)
+		# print(json)
 		return HttpResponse(json, status=200)
 	else:
 		return HttpResponse(status=401)
@@ -206,20 +207,50 @@ def getSimpleUserInformations(request):
 def createGroup(request):
 	if request.user is not None:
 		groupName = request.data['groupName']
-		private = request.data['isPrivate']
+		isPrivate = request.data['isPrivate']
 
-		qwirkGroup = QwirkGroup(name=groupName, private=private, isContactGroup=False)
+		qwirkGroup = QwirkGroup(name=groupName, isPrivate=isPrivate, isContactGroup=False)
 		qwirkGroup.save()
 		qwirkGroup.admin.add(request.user.qwirkuser)
 
-		serializer = QwirkGroupSerializer(qwirkGroup)
-		print(JSONRenderer().render(serializer.data))
-
 		request.user.qwirkuser.qwirkGroups.add(qwirkGroup)
 
-		print(request.user.qwirkuser.qwirkGroups)
-
-
 		return HttpResponse(status=201)
+	else:
+		return HttpResponse(status=401)
+
+
+@api_view(['POST'])
+def getGroupinformations(request):
+	if request.user is not None:
+		print(request.data)
+		groupName = request.data['groupname']
+
+		qwirkGroup = QwirkGroup.objects.get(name=groupName)
+
+		groupInfo = dict()
+
+		groupInfo["isPrivate"] = qwirkGroup.isPrivate
+		groupInfo["isContactGroup"] = qwirkGroup.isContactGroup
+
+		if request.user.qwirkuser in qwirkGroup.admin.all():
+			groupInfo["isAdmin"] = True
+		else:
+			groupInfo["isAdmin"] = False
+
+		qwirkUsers = QwirkUser.objects.filter(qwirkgroup=qwirkGroup)
+		groupInfo["qwirkUsers"] = list()
+
+		if groupInfo["isContactGroup"]:
+			for qwirkUser in qwirkUsers:
+				if qwirkUser.user.username != request.user.username:
+					groupInfo["titleGroupName"] = qwirkUser.user.username
+					groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(qwirkUser).data)
+		else:
+			for qwirkUser in qwirkUsers:
+				groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(qwirkUser).data)
+			groupInfo["titleGroupName"] = qwirkGroup.name
+
+		return HttpResponse(json.dumps(groupInfo), status=201)
 	else:
 		return HttpResponse(status=401)

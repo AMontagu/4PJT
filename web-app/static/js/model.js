@@ -6,6 +6,8 @@ class QwirkGroup{
   constructor() {
     this.name = "";
     this.private = true;
+    this.isContactGroup = true;
+    this.admin = []
   }
 }
 
