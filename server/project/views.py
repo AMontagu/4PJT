@@ -218,39 +218,3 @@ def createGroup(request):
 		return HttpResponse(status=201)
 	else:
 		return HttpResponse(status=401)
-
-
-@api_view(['POST'])
-def getGroupinformations(request):
-	if request.user is not None:
-		print(request.data)
-		groupName = request.data['groupname']
-
-		qwirkGroup = QwirkGroup.objects.get(name=groupName)
-
-		groupInfo = dict()
-
-		groupInfo["isPrivate"] = qwirkGroup.isPrivate
-		groupInfo["isContactGroup"] = qwirkGroup.isContactGroup
-
-		if request.user.qwirkuser in qwirkGroup.admin.all():
-			groupInfo["isAdmin"] = True
-		else:
-			groupInfo["isAdmin"] = False
-
-		qwirkUsers = QwirkUser.objects.filter(qwirkgroup=qwirkGroup)
-		groupInfo["qwirkUsers"] = list()
-
-		if groupInfo["isContactGroup"]:
-			for qwirkUser in qwirkUsers:
-				if qwirkUser.user.username != request.user.username:
-					groupInfo["titleGroupName"] = qwirkUser.user.username
-					groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(qwirkUser).data)
-		else:
-			for qwirkUser in qwirkUsers:
-				groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(qwirkUser).data)
-			groupInfo["titleGroupName"] = qwirkGroup.name
-
-		return HttpResponse(json.dumps(groupInfo), status=201)
-	else:
-		return HttpResponse(status=401)
