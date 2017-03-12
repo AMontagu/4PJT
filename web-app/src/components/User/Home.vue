@@ -209,14 +209,6 @@ export default{
       padding: 0px;
   }
 
-  #UserHeader {
-      height: 10%;
-      background-color: white;
-      width: 100%;
-      border-bottom: 1px solid grey;
-      overflow: hidden;
-  }
-
   #UserChat{
     width:100%;
     overflow: auto;

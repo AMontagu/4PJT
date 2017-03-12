@@ -29,5 +29,6 @@ urlpatterns = [
     url(r'^simpleuserinfos/', views.getSimpleUserInformations),
     url(r'^useredit/', views.editUser),
     url(r'^creategroup/', views.createGroup),
+    url(r'^addusertogroup/', views.addUserToGroup),
     url(r'^api-token-auth/', tokenView.obtain_auth_token),
 ]

@@ -218,3 +218,27 @@ def createGroup(request):
 		return HttpResponse(status=201)
 	else:
 		return HttpResponse(status=401)
+
+@api_view(['POST'])
+@renderer_classes((JSONRenderer,))
+def addUserToGroup(request):
+	if request.user is not None:
+		print(request.data)
+		groupName = request.data['groupName']
+		userName = request.data['username']
+		isAdmin = request.data['isAdmin']
+
+		qwirkGroup = QwirkGroup.objects.get(name=groupName)
+		userToAdd = User.objects.get(username=userName)
+
+		if qwirkGroup in request.user.qwirkuser.qwirkGroups.all():
+			userToAdd.qwirkuser.qwirkGroups.add(qwirkGroup)
+			# TODO add to admin
+			json = JSONRenderer().render({'status': 'success'})
+			return HttpResponse(json, status=200)
+		else:
+			print("user not authorized to add someone")
+			json = JSONRenderer().render({'status': 'error', 'text': 'You need to be admin for add an user to the group'})
+			return HttpResponse(json, status=403)
+	else:
+		return HttpResponse(status=401)

@@ -112,7 +112,7 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 						"text": text,
 					})
 				elif content["action"] == "get-message":
-					messages = Message.objects.order_by("-dateTime")[int(content["content"]["startMessage"]):int(content["content"]["endMessage"])]
+					messages = Message.objects.filter(qwirkGroup__name=kwargs["groupname"]).order_by("-dateTime")[int(content["content"]["startMessage"]):int(content["content"]["endMessage"])]
 					messageToSend = list()
 					for message in messages:
 						messageToSend.append(MessageSerializer(message).data)
@@ -139,7 +139,7 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 					else:
 						groupInfo["isAdmin"] = False
 
-					qwirkUsers = QwirkUser.objects.filter(qwirkgroup=qwirkGroup)
+					qwirkUsers = qwirkGroup.qwirkuser_set.all()
 					groupInfo["qwirkUsers"] = list()
 
 					if groupInfo["isContactGroup"]:

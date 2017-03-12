@@ -4,22 +4,24 @@
     <userHeader v-bind:group-informations="groupInformations" v-bind:is-ready="headerReady"></userHeader>
     <!--<p>User Chat with {{currentGroupName}}</p>-->
     <div id="containerChat">
-      <div v-for="message in messages" class="containerMessage">
-      <div class="pictureUser">
-        <img src="/static/media/defaultUser.png">
-      </div>
-      <div class="messageContent">
-        <div class="messageUserName">
-          <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
+      <div id="containerMessages">
+        <div v-for="message in messages" class="containerMessage">
+        <div class="pictureUser">
+          <img src="/static/media/defaultUser.png">
         </div>
-        <div class="messageText">
-          <p>{{message.text}}</p>
+        <div class="messageContent">
+          <div class="messageUserName">
+            <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
+          </div>
+          <div class="messageText">
+            <p>{{message.text}}</p>
+          </div>
         </div>
-      </div>
 
+      </div>
+      </div>
+      <input class="inputChat" type="text" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter="sendText"/>
     </div>
-    </div>
-    <input class="inputChat" type="text" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter="sendText"/>
   </div>
 </template>
 
@@ -63,7 +65,7 @@ export default{
     },
     methods: {
       scrollUpdated: function(){
-        var objDiv = document.getElementById("containerChat");
+        var objDiv = document.getElementById("containerMessages");
         objDiv.scrollTop = objDiv.scrollHeight;
       },
       sendText: function(){
@@ -114,6 +116,7 @@ export default{
       '$route' (to, from) {
         let self = this;
         self.currentGroupName = this.$route.params.name;
+        self.messages = [];
 
         if(this.socket != undefined){
           this.socket.close();
@@ -173,6 +176,13 @@ export default{
 </script>
 
 <style scoped>
+  #UserHeader {
+      height: 60px;
+      background-color: white;
+      width: 100%;
+      border-bottom: 1px solid grey;
+  }
+
   .inputChat{
     width: 95%;
     border-radius: 20px;
@@ -185,10 +195,14 @@ export default{
     padding-left: 20px;
     outline: none;
   }
-  #containerChat{
+  #containerMessages{
+     height: calc(100% - 60px);
      height: 90%;
      overflow-y: scroll;
      overflow-x: hidden;
+  }
+  #containerChat{
+    height: calc(100% - 60px);
   }
   .containerMessage{
     text-align: left;

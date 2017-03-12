@@ -2,16 +2,28 @@
   <div id="UserHeader">
     <div v-if="isReady">
       <div class="leftHeader">
-        <h4>{{groupInformations.titleGroupName}}</h4>
-        <div v-if="groupInformations.isContactGroup">
-          <span :class="getConnectionColor(groupInformations.qwirkUsers[0].status)"></span> <p class="statusText">{{groupInformations.qwirkUsers[0].status}}</p>
+        <div class="topLeftHeader">
+          <h4>{{groupInformations.titleGroupName}}</h4>
         </div>
-        <div v-else>
-          <button type="button" id="showGroupusersInformations"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{usersNumber}}</button>
+        <div class="bottomLeftHeader">
+          <div v-if="groupInformations.isContactGroup">
+            <span :class="getConnectionColor(groupInformations.qwirkUsers[0].status)"></span> <p class="statusText">{{groupInformations.qwirkUsers[0].status}}</p>
+          </div>
+          <div v-else>
+            <p><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{usersNumber}}</p>
+          </div>
         </div>
       </div>
       <div class="rightHeader">
-        <span class="glyphicon glyphicon-plus" aria-hidden="true" v-on:click="showAddUser()"></span>
+        <span class="glyphicon glyphicon-plus qwirkHeaderIcon" aria-hidden="true" v-on:click="showAddUser()"></span>
+        <div class="btn-group">
+          <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><span class="glyphicon glyphicon-cog qwirkHeaderIcon" aria-hidden="true"></span></button>
+          <ul class="dropdown-menu" style="left: -125px;">
+            <li><a v-on:click="changeConnectionStatus()">Leave {{groupInformations.titleGroupName}}</a></li>
+            <li v-if="groupInformations.isAdmin" role="separator" class="divider"></li>
+            <li v-if="groupInformations.isAdmin"><a v-on:click="logOut()">Remove {{groupInformations.titleGroupName}}</a></li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -43,6 +55,7 @@
 
 <script>
 import Modal from '../shared/Modal.vue'
+
 export default{
     name:"UserHeader",
     props: ['groupInformations', 'isReady'],
@@ -58,7 +71,7 @@ export default{
     },
     created: function(){
       let self = this;
-      console.log("aaaaaa");
+      /*console.log("aaaaaa");
       console.log(this.groupInformations);
       console.log(this.isReady);
 
@@ -66,7 +79,7 @@ export default{
         console.log("bbbbbb");
         console.log(self.groupInformations);
         console.log(self.isReady);
-      }, 3000);
+      }, 3000);*/
     },
     mounted: function(){
       this.currentGroupName = this.$route.params.name;
@@ -87,15 +100,16 @@ export default{
         return cssClass
       },
       showAddUser: function(){
+        this.errorUsername = null;
         this.createPrivateGroup = true;
         this.showModal = true;
       },
       addUser: function(){
         let self = this;
         if(self.usernameUser != ""){
-          self.$http.post('http://localhost:8000/addusertogroup/', {groupname: self.currentGroupName, username: self.usernameUser, isAdmin: self.adminUser}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
+          self.$http.post('http://localhost:8000/addusertogroup/', {groupName: self.currentGroupName, username: self.usernameUser, isAdmin: self.adminUser}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
             console.log("sucess request add user to group/channels", response);
-            data = JSON.parse(response.body);
+            let data = JSON.parse(response.body);
             console.log(data);
             if(data["status"] == "success"){
               self.showModal = false;
@@ -133,6 +147,8 @@ export default{
     text-align: left;
     padding-left: 20px;
     float: left;
+    height: 60px;
+    overflow: hidden;
   }
 
   .rightHeader{
@@ -155,5 +171,9 @@ export default{
 
   .statusText{
     display: inline-block;
+  }
+
+  .qwirkHeaderIcon{
+    font-size: 30px;
   }
 </style>
