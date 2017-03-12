@@ -1,5 +1,7 @@
 <template xmlns:v-on="http://www.w3.org/1999/xhtml">
   <div id="UserChat">
+
+    <userHeader v-bind:group-informations="groupInformations" v-bind:is-ready="headerReady"></userHeader>
     <!--<p>User Chat with {{currentGroupName}}</p>-->
     <div id="containerChat">
       <div v-for="message in messages" class="containerMessage">
@@ -22,7 +24,8 @@
 </template>
 
 <script>
-import {Message} from '../../../static/js/model.js';
+import UserHeader from './Header.vue'
+import {Message, GroupInformations} from '../../../static/js/model.js';
 export default{
     name:"UserChat",
     data(){
@@ -31,7 +34,9 @@ export default{
           socketIsOpen: false,
           inputText: "",
           currentGroupName: "",
-          messages: []
+          messages: [],
+          groupInformations: new GroupInformations(),
+          headerReady: false,
         }
     },
     created: function(){},
@@ -74,7 +79,8 @@ export default{
         this.socketIsOpen = true;
         console.log("socket is open");
         //get the last fifty messages of this discussion
-        this.socket.send(JSON.stringify({action:'get-message', content:{startMessage: 0, endMessage: 30}}))
+        this.socket.send(JSON.stringify({action:'get-message', content:{startMessage: 0, endMessage: 30}}));
+        this.socket.send(JSON.stringify({action:'get-group-informations'}));
       },
       socketError: function(err){
         console.log("ERROR : ", err);
@@ -97,6 +103,10 @@ export default{
           setTimeout(function(){
             self.scrollUpdated()
           }, 300);
+        }else if(data.action == "group-informations"){
+          //console.log(data.content)
+          this.groupInformations.copyConstructor(data.content);
+          this.headerReady = true;
         }
       }
     },
@@ -155,7 +165,9 @@ export default{
         return hour + ':' + time[1];
       }
     },
-    components:{}
+    components:{
+      UserHeader
+    }
 }
 
 </script>

@@ -112,4 +112,27 @@ class Message{
 
 }
 
-export { User, QwirkUser, QwirkGroup, Message };
+class GroupInformations{
+  constructor() {
+    this.isPrivate = true;
+    this.isContactGroup = true;
+    this.isAdmin = false;
+    this.qwirkUsers = [];
+    this.titleGroupName = "";
+  }
+
+  copyConstructor(object){
+   if(typeof object == "string"){
+    object = JSON.parse(object);
+   }
+   console.log(object);
+   this.isPrivate = object.isPrivate;
+   this.isContactGroup = object.isContactGroup;
+   this.isAdmin = object.isAdmin;
+   this.qwirkUsers = object.qwirkUsers;
+   this.titleGroupName = object.titleGroupName;
+   }
+
+}
+
+export { User, QwirkUser, QwirkGroup, Message, GroupInformations };

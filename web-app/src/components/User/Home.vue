@@ -49,7 +49,6 @@
       </div>
     </div>
     <div id="content">
-      <userHeader></userHeader>
       <div class="activeView">
         <transition name="fade" mode="out-in">
           <router-view class="view"></router-view>
@@ -82,7 +81,6 @@
 
 
 <script>
-import UserHeader from './Header.vue'
 import UserChat from './Chat.vue'
 import Modal from '../shared/Modal.vue'
 import {User, QwirkUser} from '../../../static/js/model.js';
@@ -190,7 +188,6 @@ export default{
       }
     },
     components:{
-      UserHeader,
       UserChat,
       Modal
     }
@@ -217,6 +214,14 @@ export default{
       background-color: white;
       width: 100%;
       border-bottom: 1px solid grey;
+      overflow: hidden;
+  }
+
+  #UserChat{
+    width:100%;
+    overflow: auto;
+    height: 100%;
+    position: relative;
   }
 
   #UserNavbar{
@@ -230,14 +235,7 @@ export default{
   }
 
   .activeView{
-    width:100%;
-    overflow: auto;
-    height: 90%;
-    position: relative;
-  }
-
-  #UserChat{
-    width:100%;
+    width: 100%;
     overflow: auto;
     height: 100%;
     position: relative;

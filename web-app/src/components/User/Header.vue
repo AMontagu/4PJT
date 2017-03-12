@@ -11,42 +11,67 @@
         </div>
       </div>
       <div class="rightHeader">
+        <span class="glyphicon glyphicon-plus" aria-hidden="true" v-on:click="showAddUser()"></span>
       </div>
     </div>
+
+    <modal v-if="showModal" @close="showModal = false">
+      <h3 slot="header">Add user</h3>
+      <div slot="body">
+        <label for="inputAddUser">Name *</label>
+        <input type="text" class="form-control" v-model="usernameUser" id="inputAddUser"/>
+        <span class="colorError">{{errorUserName}}</span>
+
+        <div v-if="groupInformations.isAdmin">
+          <label for="inputAdmin">Admin ?</label>
+          <input type="checkbox" v-model="adminUser" id="inputAdmin"/>
+        </div>
+      </div>
+
+
+      <div slot="footer">
+        <button class="modal-default-button" @click="showModal = false">
+          Close
+        </button>
+        <button class="modal-default-button" v-on:click="addUser()">
+          Add
+        </button>
+      </div>
+    </modal>
   </div>
 </template>
 
 <script>
+import Modal from '../shared/Modal.vue'
 export default{
     name:"UserHeader",
+    props: ['groupInformations', 'isReady'],
     data(){
         return{
           currentGroupName: "",
           titleGroupName: "",
-          groupInformations: {},
-          isReady: false
+          showModal: false,
+          usernameUser: "",
+          adminUser: false,
+          errorUserName: "",
         }
     },
     created: function(){
+      let self = this;
+      console.log("aaaaaa");
+      console.log(this.groupInformations);
+      console.log(this.isReady);
+
+      setTimeout(function(){
+        console.log("bbbbbb");
+        console.log(self.groupInformations);
+        console.log(self.isReady);
+      }, 3000);
     },
     mounted: function(){
       this.currentGroupName = this.$route.params.name;
-
-      this.getGroupInformations();
     },
     methods: {
-      getGroupInformations: function(){
-        let self = this;
-        if(self.currentGroupName != "" && self.currentGroupName != undefined){
-          self.$http.post('http://localhost:8000/groupinformations/', {groupname: self.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
-            console.log("sucess request groupinformations", response);
-            self.groupInformations = JSON.parse(response.body);
-            console.log(self.groupInformations);
-            console.log(self.groupInformations.qwirkUsers);
-            self.isReady = true;
-          })
-        }
-      },
       getConnectionColor: function(status){
         let cssClass = "statusIcon ";
         if (status == "Online"){
@@ -60,6 +85,28 @@ export default{
         }
 
         return cssClass
+      },
+      showAddUser: function(){
+        this.createPrivateGroup = true;
+        this.showModal = true;
+      },
+      addUser: function(){
+        let self = this;
+        if(self.usernameUser != ""){
+          self.$http.post('http://localhost:8000/addusertogroup/', {groupname: self.currentGroupName, username: self.usernameUser, isAdmin: self.adminUser}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
+            console.log("sucess request add user to group/channels", response);
+            data = JSON.parse(response.body);
+            console.log(data);
+            if(data["status"] == "success"){
+              self.showModal = false;
+            }else{
+              self.errorUsername = data["text"];
+            }
+          })
+        }
+        else{
+          self.errorUserName = "Please enter a username or close";
+        }
       }
     },
     computed: {
@@ -72,10 +119,11 @@ export default{
       '$route' (to, from) {
         let self = this;
         self.currentGroupName = this.$route.params.name;
-        this.getGroupInformations();
       }
     },
-    components:{}
+    components:{
+      Modal
+    }
 }
 </script>
 
@@ -84,12 +132,14 @@ export default{
     width: 50%;
     text-align: left;
     padding-left: 20px;
+    float: left;
   }
 
   .rightHeader{
     width: 50%;
     text-align: right;
     padding-right: 20px;
+    float: right;
   }
 
   .leftHeader h4{

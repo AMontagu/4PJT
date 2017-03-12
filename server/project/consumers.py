@@ -17,8 +17,9 @@ from rest_framework.authtoken.models import Token
 from channels import Group
 from project.models import QwirkGroup, Contact, QwirkUser, Message
 import json
+import time
 
-from project.serializer import MessageSerializer
+from project.serializer import MessageSerializer, QwirkUserSerializerSimple
 
 
 def checkToken(url):
@@ -119,6 +120,40 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 					text = {
 						"action": "saved-messages",
 						"content": json.dumps(messageToSend)
+					}
+					self.send(text)
+				elif content["action"] == "get-group-informations":
+					groupName = kwargs["groupname"]
+
+					print(groupName)
+
+					qwirkGroup = QwirkGroup.objects.get(name=groupName)
+
+					groupInfo = dict()
+
+					groupInfo["isPrivate"] = qwirkGroup.isPrivate
+					groupInfo["isContactGroup"] = qwirkGroup.isContactGroup
+
+					if user.qwirkuser in qwirkGroup.admin.all():
+						groupInfo["isAdmin"] = True
+					else:
+						groupInfo["isAdmin"] = False
+
+					qwirkUsers = QwirkUser.objects.filter(qwirkgroup=qwirkGroup)
+					groupInfo["qwirkUsers"] = list()
+
+					if groupInfo["isContactGroup"]:
+						for qwirkUser in qwirkUsers:
+							if qwirkUser.user.username != user.username:
+								groupInfo["titleGroupName"] = qwirkUser.user.username
+								groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(qwirkUser).data)
+					else:
+						for qwirkUser in qwirkUsers:
+							groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(qwirkUser).data)
+						groupInfo["titleGroupName"] = qwirkGroup.name
+					text = {
+						"action": "group-informations",
+						"content": json.dumps(groupInfo)
 					}
 					self.send(text)
 		else:
