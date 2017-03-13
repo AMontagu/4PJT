@@ -129,6 +129,9 @@ class GroupInformations{
    this.isPrivate = object.isPrivate;
    this.isContactGroup = object.isContactGroup;
    this.isAdmin = object.isAdmin;
+    /*if(typeof object.qwirkUsers == "string"){
+      object.qwirkUsers = JSON.parse(object.qwirkUsers);
+    }*/
    this.qwirkUsers = object.qwirkUsers;
    this.titleGroupName = object.titleGroupName;
    }
