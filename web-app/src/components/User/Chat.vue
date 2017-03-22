@@ -1,24 +1,29 @@
 <template xmlns:v-on="http://www.w3.org/1999/xhtml">
   <div id="UserChat">
 
-    <userHeader v-bind:group-informations="groupInformations" v-bind:is-ready="headerReady"></userHeader>
+    <userHeader v-bind:group-informations="groupInformations" v-bind:is-ready="headerReady" v-bind:in-call="inCall" v-on:callWebRTC="callWebRTC()"></userHeader>
     <!--<p>User Chat with {{currentGroupName}}</p>-->
-    <div id="containerChat">
+
+    <div v-if="inCall" id="containVideoChat" v-bind:class="{ 'containVideoChatFullScreen': fullScreen, 'containVideoChatMinimise': !fullScreen }">
+      <span v-if="!fullScreen" v-on:click="setFullScreen(true)" class="glyphicon glyphicon-resize-full btnResize" aria-hidden="true"></span>
+      <span v-if="fullScreen" v-on:click="setFullScreen(false)" class="glyphicon glyphicon-resize-small btnResize" aria-hidden="true"></span>
+    </div>
+
+    <div v-if="!fullScreen" id="containerChat" v-bind:class="{'containerChatCallMinimise': inCall && !fullScreen}">
       <div id="containerMessages">
         <div v-for="message in messages" class="containerMessage">
-        <div class="pictureUser">
-          <img src="/static/media/defaultUser.png">
-        </div>
-        <div class="messageContent">
-          <div class="messageUserName">
-            <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
+          <div class="pictureUser">
+            <img src="/static/media/defaultUser.png">
           </div>
-          <div class="messageText">
-            <p>{{message.text}}</p>
+          <div class="messageContent">
+            <div class="messageUserName">
+              <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
+            </div>
+            <div class="messageText">
+              <p>{{message.text}}</p>
+            </div>
           </div>
         </div>
-
-      </div>
       </div>
       <input class="inputChat" type="text" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter="sendText"/>
     </div>
@@ -39,6 +44,8 @@ export default{
           messages: [],
           groupInformations: new GroupInformations(),
           headerReady: false,
+          inCall: false,
+          fullScreen: false,
         }
     },
     created: function(){},
@@ -109,7 +116,19 @@ export default{
           //console.log(data.content)
           this.groupInformations.copyConstructor(data.content);
           this.headerReady = true;
+        }else if(data.action == "call"){
+          console.log(data.content);
+          console.log("receive call from ", data.content.user.username);
         }
+      },
+      callWebRTC: function(){
+        console.log("we call !");
+        if(!this.inCall){
+          this.inCall = true;
+        }
+      },
+      setFullScreen: function(isFullScreen){
+        this.fullScreen = isFullScreen;
       }
     },
     watch: {
@@ -195,6 +214,28 @@ export default{
     padding-left: 20px;
     outline: none;
   }
+
+  #containVideoChat{
+    float: left;
+    height: calc(100% - 60px);
+    position: relative;
+  }
+
+  .containVideoChatFullScreen{
+    width: 100%;
+  }
+
+  .containVideoChatMinimise{
+    width: 40%;
+  }
+
+  .btnResize{
+    position: absolute;
+    width: 20px;
+    bottom: 30px;
+    right: 30px;
+  }
+
   #containerMessages{
      height: calc(100% - 60px);
      height: 90%;
@@ -203,7 +244,14 @@ export default{
   }
   #containerChat{
     height: calc(100% - 60px);
+    position: relative;
   }
+
+  .containerChatCallMinimise{
+    float: right;
+    width: 60%;
+  }
+
   .containerMessage{
     text-align: left;
     display: block;

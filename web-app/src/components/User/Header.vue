@@ -15,6 +15,7 @@
         </div>
       </div>
       <div class="rightHeader">
+        <span v-if="!inCall" class="glyphicon glyphicon glyphicon-earphone qwirkHeaderIcon" aria-hidden="true" v-on:click="emitCallWebRTC()"></span>
         <span class="glyphicon glyphicon-plus qwirkHeaderIcon" aria-hidden="true" v-on:click="showAddUser()"></span>
         <div class="btn-group">
           <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><span class="glyphicon glyphicon-cog qwirkHeaderIcon" aria-hidden="true"></span></button>
@@ -58,7 +59,7 @@ import Modal from '../shared/Modal.vue'
 
 export default{
     name:"UserHeader",
-    props: ['groupInformations', 'isReady'],
+    props: ['groupInformations', 'isReady', 'inCall'],
     data(){
         return{
           currentGroupName: "",
@@ -121,6 +122,9 @@ export default{
         else{
           self.errorUserName = "Please enter a username or close";
         }
+      },
+      emitCallWebRTC: function(){
+        this.$emit("callWebRTC");
       }
     },
     computed: {

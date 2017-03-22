@@ -7,6 +7,7 @@ import Router from 'vue-router'
 
 import Home from '../components/Home.vue'
 import SignIn from '../components/SignIn.vue'
+import TestRoomCall from '../components/TestRoomCall.vue'
 
 import UserHome from '../components/User/Home.vue'
 import UserChat from '../components/User/Chat.vue'
@@ -20,6 +21,7 @@ export default new Router({
   routes: [
     { path: '/', component: Home},
     { path: '/signin', component: SignIn},
+    { path: '/testRoomCall', component: TestRoomCall},
     { path: '/user', component: UserHome,
       children: [
         {
