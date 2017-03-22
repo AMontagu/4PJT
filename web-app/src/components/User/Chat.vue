@@ -27,12 +27,33 @@
       </div>
       <input class="inputChat" type="text" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter="sendText"/>
     </div>
+
+    <modal v-if="showModal" @close="showModal = false">
+      <h3 slot="header">Call From {{userCallUsername}}</h3>
+      <div slot="body">
+        <button class="modal-default-button" v-on:click="acceptCall()">
+          Accept
+        </button>
+        <button class="modal-default-button" @click="showModal = false">
+          Decline
+        </button>
+      </div>
+
+
+      <div slot="footer">
+        <button class="modal-default-button" @click="showModal = false">
+          Close
+        </button>
+      </div>
+    </modal>
+
   </div>
 </template>
 
 <script>
 import UserHeader from './Header.vue'
-import {Message, GroupInformations} from '../../../static/js/model.js';
+import Modal from '../shared/Modal.vue'
+import {Message, GroupInformations, QwirkUser} from '../../../static/js/model.js';
 export default{
     name:"UserChat",
     data(){
@@ -42,15 +63,25 @@ export default{
           inputText: "",
           currentGroupName: "",
           messages: [],
+          qwirkUser: new QwirkUser(),
           groupInformations: new GroupInformations(),
           headerReady: false,
           inCall: false,
           fullScreen: false,
+          userCallUsername: "",
+          showModal: false,
         }
     },
     created: function(){},
     mounted: function(){
       let self = this;
+
+      self.$http.get('http://localhost:8000/userinfos/', {headers: {'Authorization': "Token " + self.$cookie.get('token')}}).then(function(response){
+        self.qwirkUser.copyConstructor(response.body);
+      }, function(err){
+        console.log("error :", err);
+      });
+
       console.log(this.$route.params);
       self.currentGroupName = this.$route.params.name;
       if(self.currentGroupName != "" && self.currentGroupName != undefined){
@@ -69,6 +100,28 @@ export default{
           self.socketError(err);
         };
       }
+
+      self.connection = new RTCMultiConnection();
+
+      // this line is VERY_important
+      self.connection.socketURL = 'http://localhost:9001/';
+
+      // all below lines are optional; however recommended.
+
+      self.connection.session = {
+          audio: true,
+          video: true
+      };
+
+      self.connection.sdpConstraints.mandatory = {
+          OfferToReceiveAudio: true,
+          OfferToReceiveVideo: true
+      };
+
+      self.connection.onstream = function(event) {
+          let containerVideoChat = document.getElementById("containVideoChat");
+          containerVideoChat.appendChild(event.mediaElement);
+      };
     },
     methods: {
       scrollUpdated: function(){
@@ -117,18 +170,31 @@ export default{
           this.groupInformations.copyConstructor(data.content);
           this.headerReady = true;
         }else if(data.action == "call"){
-          console.log(data.content);
-          console.log("receive call from ", data.content.user.username);
+          console.log("receive call from ", data.content.username);
+          if(this.qwirkUser.user.username != data.content.username){
+            this.userCallUsername = data.content.username;
+            this.showModal = true;
+          }
         }
       },
       callWebRTC: function(){
         console.log("we call !");
         if(!this.inCall){
           this.inCall = true;
+
+          this.connection.open(this.currentGroupName);
+          this.socket.send(JSON.stringify({action:'call', content:{username: this.qwirkUser.user.username}}))
+        }else{
+          this.connection.join(this.currentGroupName);
         }
       },
       setFullScreen: function(isFullScreen){
         this.fullScreen = isFullScreen;
+      },
+      acceptCall: function(){
+        this.inCall = true;
+        this.connection.join(this.currentGroupName);
+        this.showModal = false;
       }
     },
     watch: {
@@ -188,7 +254,8 @@ export default{
       }
     },
     components:{
-      UserHeader
+      UserHeader,
+      Modal
     }
 }
 
@@ -231,9 +298,10 @@ export default{
 
   .btnResize{
     position: absolute;
-    width: 20px;
-    bottom: 30px;
-    right: 30px;
+    width: 30px;
+    height: 30px;
+    top: 45px;
+    left: 15px;
   }
 
   #containerMessages{

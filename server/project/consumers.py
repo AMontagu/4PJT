@@ -111,6 +111,10 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 					Group(kwargs["groupname"]).send({
 						"text": text,
 					})
+				elif content["action"] == "call":
+					Group(kwargs["groupname"]).send({
+						"text": json.dumps(content),
+					})
 				elif content["action"] == "get-message":
 					messages = Message.objects.filter(qwirkGroup__name=kwargs["groupname"]).order_by("-dateTime")[int(content["content"]["startMessage"]):int(content["content"]["endMessage"])]
 					messageToSend = list()
