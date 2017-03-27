@@ -5,10 +5,10 @@
     <!--<p>User Chat with {{currentGroupName}}</p>-->
 
     <div v-if="inCall" id="containVideoChat" class="fullHeightScrolling" v-bind:class="{ 'containVideoChatFullScreen': fullScreen, 'containVideoChatMinimise': !fullScreen }">
-      <span v-if="!fullScreen" v-on:click="setFullScreen(true)" class="glyphicon glyphicon-resize-full btnResize" aria-hidden="true"></span>
-      <span v-if="fullScreen" v-on:click="setFullScreen(false)" class="glyphicon glyphicon-resize-small btnResize" aria-hidden="true"></span>
-      <div id="videoList">
-
+      <div class="containerScroll">
+        <span v-if="!fullScreen" v-on:click="setFullScreen(true)" class="glyphicon glyphicon-resize-full btnResize" aria-hidden="true"></span>
+        <span v-if="fullScreen" v-on:click="setFullScreen(false)" class="glyphicon glyphicon-resize-small btnResize" aria-hidden="true"></span>
+        <div id="videoList"> </div>
       </div>
 
       <div id="icons" class="active fixBottom">
@@ -40,7 +40,7 @@
     </div>
 
     <div v-if="!fullScreen" id="containerChat" class="fullHeightScrolling" v-bind:class="{'containerChatCallMinimise': inCall && !fullScreen}">
-      <div id="containerMessages">
+      <div class="containerScroll">
         <div v-for="message in messages" class="containerMessage">
           <div class="pictureUser">
             <img src="/static/media/defaultUser.png">
@@ -154,6 +154,21 @@ export default{
           let containerVideoChat = document.getElementById("videoList");
           containerVideoChat.appendChild(event.mediaElement);
       };
+
+      self.connection.onspeaking = function (e) {
+        // e.streamid, e.userid, e.stream, etc.
+        console.log(e);
+        e.mediaElement.style.border = '1px solid red';
+      };
+
+      self.connection.onsilence = function (e) {
+        // e.streamid, e.userid, e.stream, etc.
+        e.mediaElement.style.border = '';
+      };
+
+      /*self.connection.onerror = function(e) {
+        console.log("RTCMultiConnection error: ", e);
+      };*/
     },
     methods: {
       scrollUpdated: function(){
@@ -230,12 +245,27 @@ export default{
       },
       muteAudio: function(){
         console.log("mute audio");
+        if(this.isAudioEnable){
+          this.connection.streamEvents['stream-id'].stream.mute('audio');
+        }else{
+          this.connection.streamEvents['stream-id'].stream.unmute('audio');
+        }
       },
       muteVideo: function(){
         console.log("mute video");
+        if(this.isAudioEnable){
+          this.connection.streamEvents['stream-id'].stream.mute('video');
+        }else{
+          this.connection.streamEvents['stream-id'].stream.unmute('video');
+        }
       },
       hangup: function(){
-      console.log("hangUp");
+        console.log("hangUp");
+        this.connection.attachStreams.forEach(function(stream) {
+            stream.stop();
+        });
+        //this.connection.streams.stop();
+        this.inCall = false;
       }
     },
     watch: {
@@ -347,11 +377,11 @@ export default{
     top: 10px;
     left: 15px;
     font-size: 30px;
+    z-index: 100;
   }
 
-  #containerMessages{
+  .containerScroll{
      height: calc(100% - 60px);
-     height: 90%;
      overflow-y: scroll;
      overflow-x: hidden;
   }
