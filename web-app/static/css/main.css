@@ -68,3 +68,11 @@ html{
   -webkit-transform: scale(1.1);
   transform: scale(1.1);
 }
+
+
+#videoList video{
+  width: 200px;
+  height: 200px;
+  float: left;
+  margin: 20px;
+}
