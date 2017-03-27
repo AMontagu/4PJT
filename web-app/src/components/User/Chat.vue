@@ -40,7 +40,7 @@
     </div>
 
     <div v-if="!fullScreen" id="containerChat" class="fullHeightScrolling" v-bind:class="{'containerChatCallMinimise': inCall && !fullScreen}">
-      <div class="containerScroll">
+      <div class="containerScroll" id="containerMessages">
         <div v-for="message in messages" class="containerMessage">
           <div class="pictureUser">
             <img src="/static/media/defaultUser.png">
@@ -132,43 +132,6 @@ export default{
           self.socketError(err);
         };
       }
-
-      self.connection = new RTCMultiConnection();
-
-      // this line is VERY_important
-      self.connection.socketURL = 'http://localhost:9001/';
-
-      // all below lines are optional; however recommended.
-
-      self.connection.session = {
-          audio: true,
-          video: true
-      };
-
-      self.connection.sdpConstraints.mandatory = {
-          OfferToReceiveAudio: true,
-          OfferToReceiveVideo: true
-      };
-
-      self.connection.onstream = function(event) {
-          let containerVideoChat = document.getElementById("videoList");
-          containerVideoChat.appendChild(event.mediaElement);
-      };
-
-      self.connection.onspeaking = function (e) {
-        // e.streamid, e.userid, e.stream, etc.
-        console.log(e);
-        e.mediaElement.style.border = '1px solid red';
-      };
-
-      self.connection.onsilence = function (e) {
-        // e.streamid, e.userid, e.stream, etc.
-        e.mediaElement.style.border = '';
-      };
-
-      /*self.connection.onerror = function(e) {
-        console.log("RTCMultiConnection error: ", e);
-      };*/
     },
     methods: {
       scrollUpdated: function(){
@@ -218,7 +181,7 @@ export default{
           this.headerReady = true;
         }else if(data.action == "call"){
           console.log("receive call from ", data.content.username);
-          if(this.qwirkUser.user.username != data.content.username){
+          if(this.qwirkUser.user.username != data.content.username && !this.inCall){
             this.userCallUsername = data.content.username;
             this.showModal = true;
           }
@@ -226,10 +189,95 @@ export default{
       },
       callWebRTC: function(){
         console.log("we call !");
+        let self = this;
+        this.connection = new RTCMultiConnection();
+
+        // this line is VERY_important
+        this.connection.socketURL = 'http://localhost:9001/';
+
+        // all below lines are optional; however recommended.
+
+        this.connection.session = {
+            audio: true,
+            video: true
+        };
+
+        this.connection.onstream = function(event) {
+          if (document.getElementById(event.streamid)) {
+            console.log("duplicate video");
+            return;
+          }
+            event.mediaElement.id = event.streamid;
+            let containerVideoChat = document.getElementById("videoList");
+            containerVideoChat.appendChild(event.mediaElement);
+            self.initHark({
+              stream: event.stream,
+              streamedObject: event,
+              connection: self.connection
+            });
+        };
+
+        this.connection.keepStreamsOpened = false;
+
+        this.connection.sdpConstraints.mandatory = {
+            OfferToReceiveAudio: true,
+            OfferToReceiveVideo: true
+        };
+
+        this.connection.onspeaking = function (e) {
+          // e.streamid, e.userid, e.stream, etc.
+          e.mediaElement.style.border = '1px solid red';
+        };
+
+        this.connection.onsilence = function (e) {
+          // e.streamid, e.userid, e.stream, etc.
+          e.mediaElement.style.border = '';
+        };
+
+        this.connection.onvolumechange = function(event) {
+          event.mediaElement.style.borderWidth = event.volume;
+        };
+
+        /*this.connection.onmute = function(event) {
+          if (event.session.video) {
+            event.mediaElement.src2 = event.mediaElement.src;
+            event.mediaElement.src = '';
+            event.mediaElement.style.background = 'transparent url(https://cdn.webrtc-experiment.com/images/muted.png) no-repeat center center';
+            return;
+          }
+
+          if (event.stream.pause) {
+            // for audio-streams
+            // ask hark.js to resume looping and checking for voice activity
+            event.stream.pause();
+          }
+        };
+
+        this.connection.onunmute = function(event) {
+          if (event.session.video) {
+            console.log("ici");
+            //event.mediaElement.removeAttribute('poster');
+            //event.mediaElement.removeAttribute('style');
+            event.mediaElement.src = event.mediaElement.src2;
+            event.mediaElement.play();
+            event.mediaElement.style.background = '';
+            return;
+          }
+
+          if (event.stream.resume) {
+            // for audio-streams
+            // ask hark.js to stop looping and checking for voice activity
+            event.stream.resume();
+          }
+        };*/
+
+        this.connection.onerror = function(e) {
+          console.log("RTCMultiConnection error: ", e);
+        };
+
         if(!this.inCall){
           this.inCall = true;
-
-          this.connection.open(this.currentGroupName);
+          this.connection.openOrJoin(this.currentGroupName);
           this.socket.send(JSON.stringify({action:'call', content:{username: this.qwirkUser.user.username}}))
         }else{
           this.connection.join(this.currentGroupName);
@@ -240,24 +288,39 @@ export default{
       },
       acceptCall: function(){
         this.inCall = true;
-        this.connection.join(this.currentGroupName);
+        this.callWebRTC();
         this.showModal = false;
       },
       muteAudio: function(){
+        console.log(this.connection.attachStreams);
         console.log("mute audio");
         if(this.isAudioEnable){
-          this.connection.streamEvents['stream-id'].stream.mute('audio');
+          this.connection.attachStreams.forEach(function(stream) {
+            stream.mute({/*type:'local', */audio:true}); // mute all tracks
+          });
+          //this.connection.streamEvents['stream-id'].stream.mute('audio');
         }else{
-          this.connection.streamEvents['stream-id'].stream.unmute('audio');
+          this.connection.attachStreams.forEach(function(stream) {
+            stream.unmute({/*type:'local', */audio:true}); // mute all tracks
+          });
+          //this.connection.streamEvents['stream-id'].stream.unmute('audio');
         }
+        this.isAudioEnable = !this.isAudioEnable;
       },
       muteVideo: function(){
         console.log("mute video");
-        if(this.isAudioEnable){
-          this.connection.streamEvents['stream-id'].stream.mute('video');
+        if(this.isVideoEnable){
+          this.connection.attachStreams.forEach(function(stream) {
+            stream.mute({/*type:'local', */video:true}); // mute all tracks
+          });
+          //this.connection.streamEvents['stream-id'].stream.mute('video');
         }else{
-          this.connection.streamEvents['stream-id'].stream.unmute('video');
+          this.connection.attachStreams.forEach(function(stream) {
+            stream.unmute({/*type:'local', */video:true}); // mute all tracks
+          });
+          //this.connection.streamEvents['stream-id'].stream.unmute('video');
         }
+        this.isVideoEnable = !this.isVideoEnable;
       },
       hangup: function(){
         console.log("hangUp");
@@ -265,7 +328,37 @@ export default{
             stream.stop();
         });
         //this.connection.streams.stop();
+        //this.connection.leave();
+        //this.connection.close();
+        this.connection.disconnect();
         this.inCall = false;
+      },
+      initHark: function(args) {
+        if (!window.hark) {
+            throw 'Please link hark.js';
+            return;
+        }
+
+        var connection = args.connection;
+        var streamedObject = args.streamedObject;
+        var stream = args.stream;
+
+        var options = {};
+        var speechEvents = hark(stream, options);
+
+        speechEvents.on('speaking', function() {
+            connection.onspeaking(streamedObject);
+        });
+
+        speechEvents.on('stopped_speaking', function() {
+            connection.onsilence(streamedObject);
+        });
+
+        speechEvents.on('volume_change', function(volume, threshold) {
+            streamedObject.volume = volume;
+            streamedObject.threshold = threshold;
+            connection.onvolumechange(streamedObject);
+        });
       }
     },
     watch: {
