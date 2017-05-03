@@ -220,8 +220,6 @@
             location.href = '/';
           }else{
             this.$http.get(this.url, {params:  {q: val}, headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
-              console.log("sucess request autocomplete", response);
-
               self.json = JSON.parse(response.data);
             });
           }

@@ -21,7 +21,14 @@
     <script src="http://localhost:9001/socket.io/socket.io.js"></script>
 
     <!-- built files will be auto injected -->
+    <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
+    <!-- normal script imports etc  -->
     <script src="/static/js/jquery.min.js"></script>
+
+    <!-- Insert this line after script imports -->
+    <script>if (window.module) module = window.module;</script>
+
     <script src="/static/js/bootstrap.min.js"></script>
     <script src="/static/js/hark.js"></script>
     <!-- <script src="/static/js/peer.min.js"></script> -->
