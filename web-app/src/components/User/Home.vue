@@ -105,22 +105,17 @@ export default{
         }
     },
     created: function(){
-      this.checkIfUserLoggedIn();
-    },
-    mounted: function(){},
-    methods:{
-      checkIfUserLoggedIn: function(){
-        let self = this;
-        console.log(self.$cookie.get('token'));
-        self.$http.get('http://localhost:8000/userinfos/').then(function(response){
+      self.$http.get('http://localhost:8000/userinfos/').then((response) => {
           self.qwirkUser.copyConstructor(response.body);
-          console.log(self.qwirkUser);
-          console.log(self.qwirkUser.contacts[0]);
-          console.log(self.qwirkUser.qwirkGroups);
+          //console.log(this.qwirkUser);
+          //console.log(this.qwirkUser.contacts[0]);
+          //console.log(this.qwirkUser.qwirkGroups);
         }, function(err){
           console.log("error :", err);
         });
-      },
+    },
+    mounted: function(){},
+    methods:{
       addContact: function(){
         self = this;
         let username = document.getElementById('searchBarText').value;
