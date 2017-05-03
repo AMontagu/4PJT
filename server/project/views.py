@@ -38,6 +38,8 @@ def loginUser(request):
 					# update the created time of the token to keep it valid
 					token.created = datetime.utcnow().replace(tzinfo=utc)
 					token.save()
+				login(request, user)
+				print(request)
 				return HttpResponse(token.key, status=200)
 			else:
 				LOGINFO("fail login with username/email " + username + " password " + password)
@@ -242,3 +244,44 @@ def addUserToGroup(request):
 			return HttpResponse(json, status=403)
 	else:
 		return HttpResponse(status=401)
+
+
+@api_view(['GET'])
+@renderer_classes((JSONRenderer,))
+def userAutocomplete(request):
+	print("ici")
+
+	q = request.query_params.get('q', None)
+
+	# Don't forget to filter out results depending on the visitor !
+	if not request.user.is_authenticated():
+		json = JSONRenderer().render({"error": "authorization fail"})
+		return HttpResponse(json, status=401)
+
+	qs = User.objects.all()
+
+	userSerialized = dict()
+
+	if q:
+		qsStart = qs.filter(username__istartswith=q)
+		qsSearch = qs.filter(username__icontains=q)
+
+		print(qsSearch)
+
+		for result in qsStart:
+			print(result)
+			userSerialized[result.username] = dict()
+			userSerialized[result.username]["username"] = result.username
+
+		for result in qsSearch:
+			print(result)
+			userSerialized[result.username] = dict()
+			userSerialized[result.username]["username"] = result.username
+	else:
+		for result in qs:
+			userSerialized[result.username] = dict()
+			userSerialized[result.username]["username"] = result.username
+
+	json = JSONRenderer().render(userSerialized)
+	print(json)
+	return HttpResponse(json, status=200)

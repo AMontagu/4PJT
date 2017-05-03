@@ -14,7 +14,16 @@
         </div>
       </div>
       <div id="searchPart">
-        <input type="text" class="inputText inputSearch" placeholder="username" v-model="searchBarText"/>
+
+        <autoComplete
+          url="http://localhost:8000/user-autocomplete/"
+          anchor="username"
+          placeholder="username"
+          class-name="inputText inputSearch"
+          id="searchBarText">
+        </autoComplete>
+
+        <!-- <input type="text" class="inputText inputSearch" placeholder="username" v-model="searchBarText"/> -->
         <button type="button" class="btn btn-action" v-on:click="addContact">Add</button>
       </div>
       <div class="chatKind">
@@ -81,16 +90,15 @@
 
 
 <script>
-import UserChat from './Chat.vue'
 import Modal from '../shared/Modal.vue'
 import {User, QwirkUser} from '../../../static/js/model.js';
+import AutoComplete from '../shared/AutoComplete.vue'
 export default{
     name:"UserHome",
     data(){
         return{
           isConnected: false,
           qwirkUser: new QwirkUser(),
-          searchBarText: "",
           showModal: false,
           modalHeader: "",
           createPrivateGroup: true,
@@ -135,11 +143,13 @@ export default{
       },
       addContact: function(){
         self = this;
-        let username = self.searchBarText;
+        let username = document.getElementById('searchBarText').value;
+        console.log('username: ', username);
         console.log("token " + self.$cookie.get('token'));
         self.$http.post('http://localhost:8000/addcontact/', {'username': username}, {headers: {'Authorization': "Token " + self.$cookie.get('token')}}).then(function(response){
           console.log("sucess add contact", response);
           self.currentGroupName = response.body;
+          document.getElementById('searchBarText').value = "";
         }, function(err){
           console.log("error :", err);
         });
@@ -188,8 +198,8 @@ export default{
       }
     },
     components:{
-      UserChat,
-      Modal
+      Modal,
+      AutoComplete
     }
 }
 

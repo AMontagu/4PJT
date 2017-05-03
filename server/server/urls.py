@@ -31,4 +31,5 @@ urlpatterns = [
     url(r'^creategroup/', views.createGroup),
     url(r'^addusertogroup/', views.addUserToGroup),
     url(r'^api-token-auth/', tokenView.obtain_auth_token),
+    url(r'^user-autocomplete/$', views.userAutocomplete)
 ]

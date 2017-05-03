@@ -6,6 +6,5 @@ class ProjectConfig(AppConfig):
     name = 'project'
 
     def ready(self):
-        print("ici")
         initializeLog("ProjectWS", "ProjectWS.txt", True, 10)
         LOGINFO("LOG INITIALIZED in apps.py")
