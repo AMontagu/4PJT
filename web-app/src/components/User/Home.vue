@@ -1,5 +1,5 @@
 <template xmlns:v-on="http://www.w3.org/1999/xhtml">
-  <div id="UserHome" v-if="isConnected">
+  <div id="UserHome">
     <div id="UserNavbar">
       <div id="userPart">
         <!-- Split button -->
@@ -97,7 +97,6 @@ export default{
     name:"UserHome",
     data(){
         return{
-          isConnected: false,
           qwirkUser: new QwirkUser(),
           showModal: false,
           modalHeader: "",
@@ -111,35 +110,16 @@ export default{
     mounted: function(){},
     methods:{
       checkIfUserLoggedIn: function(){
-        //TODO look into cookies
         let self = this;
-        if (this.$cookie.get('token') == null){
-          location.href = '/';
-        }else{
-          this.$http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
-            console.log("sucess request isloggedin", response);
-            if(response.body == "True"){
-              console.log("user is logged in");
-              self.isConnected = true;
-              console.log(self.$cookie.get('token'));
-              self.$http.get('http://localhost:8000/userinfos/', {headers: {'Authorization': "Token " + self.$cookie.get('token')}}).then(function(response){
-                self.qwirkUser.copyConstructor(response.body);
-                console.log(self.qwirkUser);
-                console.log(self.qwirkUser.contacts[0]);
-                console.log(self.qwirkUser.qwirkGroups);
-              }, function(err){
-                console.log("error :", err);
-              });
-            }else{
-              console.log("user is NOT logged in");
-              // TODO look cookies for username and password
-              self.$router.push('/');
-            }
-          }, function(err){
-            console.log("error :", err);
-            location.href = '/';
-          });
-        }
+        console.log(self.$cookie.get('token'));
+        self.$http.get('http://localhost:8000/userinfos/').then(function(response){
+          self.qwirkUser.copyConstructor(response.body);
+          console.log(self.qwirkUser);
+          console.log(self.qwirkUser.contacts[0]);
+          console.log(self.qwirkUser.qwirkGroups);
+        }, function(err){
+          console.log("error :", err);
+        });
       },
       addContact: function(){
         self = this;
@@ -200,7 +180,7 @@ export default{
     components:{
       Modal,
       AutoComplete
-    }
+    },
 }
 
 </script>

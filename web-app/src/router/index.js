@@ -23,6 +23,29 @@ export default new Router({
     { path: '/signin', component: SignIn},
     { path: '/testRoomCall', component: TestRoomCall},
     { path: '/user', component: UserHome,
+      beforeEnter: (to, from, next) => {
+        let self = this;
+        if (Vue.cookie.get('token') == null) {
+          next('/');
+        } else {
+
+          Vue.http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + Vue.cookie.get('token')}}).then(function (response) {
+
+            if (response.body == "True") {
+              console.log("user is logged in");
+              Vue.http.headers.common['Authorization'] = 'Token ' + Vue.cookie.get('token');
+              next();
+            } else {
+              console.log("user is NOT logged in");
+              // TODO look cookies for username and password
+              next('/');
+            }
+          }, function (err) {
+            console.log("error :", err);
+            next('/')
+          });
+        }
+      },
       children: [
         {
           path: '',

@@ -36,26 +36,9 @@ export default{
       logIn: function(){
         this.$http.post('http://localhost:8000/login/', this.user).then(function(response){
         console.log("sucess login", response);
-        //'X-CSRFToken':getCookie('csrftoken'), 'sessionid':getCookie('sessionid')
-
-        console.log(response.body);
         this.$cookie.set('token', response.body, 1);
 
-        //this.$http.headers.common['Authorization'] = 'Token ' + response.body;
-
         this.$router.push('user/');
-
-        /*this.$http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + response.body}}).then(function(response){
-            console.log("sucess request", response);
-            if(response.body == "True"){
-              console.log("user is logged in");
-              this.$router.push('user/');
-            }else{
-              console.log("user is NOT logged in");
-            }
-          }, function(err){
-            console.log("error :", err);
-          });*/
       }, function(err){
         console.log("error :", err);
       });
