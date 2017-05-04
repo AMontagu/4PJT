@@ -184,19 +184,6 @@ def getUserInformations(request):
 			print(field.name)"""
 		#qwirkUser = QwirkUser.objects.get(user=request.user)
 		serializer = QwirkUserSerializer(request.user.qwirkuser)
-		"""notifications = Notification.objects.filter(qwirkUser=request.user.qwirkuser)
-		print("ici")
-		for notification in notifications:
-			print(notification.qwirkUser.user.username)
-			print(notification.message.text)"""
-
-		for notification in request.user.qwirkuser.notifications.all():
-			# print(notification.qwirkUser.user.username)
-			# print(notification.message.text)
-			notifSerializer = NotificationSerializer(notification)
-			#print(notifSerializer.data)
-
-		# serializer.data['notifications'] = request.user.qwirkuser.notification_set.all()
 
 		json = JSONRenderer().render(serializer.data)
 		# print(serializer.data['notifications'])

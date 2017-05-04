@@ -97,7 +97,7 @@
 
 <script>
 import Modal from '../shared/Modal.vue'
-import {User, QwirkUser} from '../../../static/js/model.js';
+import {User, QwirkUser, Notification} from '../../../static/js/model.js';
 import AutoComplete from '../shared/AutoComplete.vue'
 export default{
   name:"UserHome",
@@ -155,10 +155,12 @@ export default{
         var data = JSON.parse(message.data);
         console.log(data);
 
-        if(data.action == "new-message"){
-
-          let groupName = data.groupname;
-
+        if(data.action == "notification"){
+          console.log(data.notification);
+          let notification = new Notification();
+          notification.copyConstructor(data.notification);
+          console.log(notification);
+          self.processNotification(notification);
         }
       }
 
@@ -229,7 +231,7 @@ export default{
         let txt = document.createTextNode(value.toString());
         el.innerText = txt.textContent;
       }
-    }
+    },
   },
   filters: {
     groupPath: function (name) {

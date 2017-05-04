@@ -15,11 +15,14 @@ from channels.generic.websockets import WebsocketConsumer, JsonWebsocketConsumer
 from django.utils.timezone import utc
 from rest_framework.authtoken.models import Token
 from channels import Group
+from rest_framework.renderers import JSONRenderer
+
 from project.models import QwirkGroup, Contact, QwirkUser, Message, Notification
 import json
 import time
 
-from project.serializer import MessageSerializer, QwirkUserSerializerSimple
+from project.serializer import MessageSerializer, QwirkUserSerializerSimple, NotificationSerializer, \
+	NotificationSerializerSimple
 
 
 def checkToken(url, isUser):
@@ -129,27 +132,34 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 
 					# NOTIFICATION PART
 
-					notification = json.dumps({
-						"action": "new-message",
-						"groupname": qwirkGroup.name
-					})
-
 					if qwirkGroup.isContactGroup:
 						for contact in qwirkGroup.contact_set.all():
 							print(contact.qwirkUser)
-							notification = Notification.objects.create(message=message, qwirkUser=contact.qwirkUser)
-							notification.save()
-							Group("user" + contact.qwirkUser.user.username).send({
-								"text": notification,
-							})
+							if contact.qwirkUser != user.qwirkuser:
+								notification = Notification.objects.create(message=message, qwirkUser=contact.qwirkUser)
+								notification.save()
+								serializer = NotificationSerializerSimple(notification)
+								text = json.dumps({
+									"action": "notification",
+									"notification": serializer.data
+								})
+								Group("user" + contact.qwirkUser.user.username).send({
+									"text": text,
+								})
 					else:
 						for qwirkUser in qwirkGroup.qwirkuser_set.all():
 							print(qwirkUser)
-							notification = Notification.objects.create(message=message, qwirkUser=qwirkUser)
-							notification.save()
-							Group("user" + qwirkUser.user.username).send({
-								"text": notification,
-							})
+							if qwirkUser != user.qwirkuser:
+								notification = Notification.objects.create(message=message, qwirkUser=qwirkUser)
+								notification.save()
+								serializer = NotificationSerializerSimple(notification)
+								text = json.dumps({
+									"action": "notification",
+									"notification": serializer.data
+								})
+								Group("user" + qwirkUser.user.username).send({
+									"text": text,
+								})
 
 				elif content["action"] == "call":
 					Group(kwargs["groupname"]).send({

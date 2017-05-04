@@ -171,4 +171,4 @@ class GroupInformations{
 
 }
 
-export { User, QwirkUser, QwirkGroup, Message, GroupInformations };
+export { User, QwirkUser, QwirkGroup, Message, GroupInformations, Notification };
