@@ -19,6 +19,7 @@ new Vue({
   http: {
     root: '/',
   },
+  qwirkUser: new QwirkUser(),
   template: '<App/>',
   components: { App }
 })

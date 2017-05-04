@@ -96,32 +96,32 @@ import AutoComplete from '../shared/AutoComplete.vue'
 export default{
     name:"UserHome",
     data(){
-        return{
-          qwirkUser: new QwirkUser(),
-          showModal: false,
-          modalHeader: "",
-          createPrivateGroup: true,
-          groupName: ""
-        }
+      return{
+        qwirkUser: new QwirkUser(),
+        showModal: false,
+        modalHeader: "",
+        createPrivateGroup: true,
+        groupName: ""
+      }
     },
-    created: function(){
+    created: function(){},
+    mounted: function(){
       self.$http.get('http://localhost:8000/userinfos/').then((response) => {
-          self.qwirkUser.copyConstructor(response.body);
-          //console.log(this.qwirkUser);
-          //console.log(this.qwirkUser.contacts[0]);
-          //console.log(this.qwirkUser.qwirkGroups);
-        }, function(err){
-          console.log("error :", err);
-        });
+        self.qwirkUser.copyConstructor(response.body);
+        //console.log(this.qwirkUser);
+        //console.log(this.qwirkUser.contacts[0]);
+        //console.log(this.qwirkUser.qwirkGroups);
+      }, function(err){
+        console.log("error :", err);
+      });
     },
-    mounted: function(){},
     methods:{
       addContact: function(){
         self = this;
         let username = document.getElementById('searchBarText').value;
         console.log('username: ', username);
         console.log("token " + self.$cookie.get('token'));
-        self.$http.post('http://localhost:8000/addcontact/', {'username': username}, {headers: {'Authorization': "Token " + self.$cookie.get('token')}}).then(function(response){
+        self.$http.post('http://localhost:8000/addcontact/', {'username': username}).then((response) => {
           console.log("sucess add contact", response);
           self.currentGroupName = response.body;
           document.getElementById('searchBarText').value = "";

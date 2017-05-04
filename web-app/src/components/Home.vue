@@ -34,14 +34,14 @@ export default{
     mounted: function(){},
     methods: {
       logIn: function(){
-        this.$http.post('http://localhost:8000/login/', this.user).then(function(response){
-        console.log("sucess login", response);
-        this.$cookie.set('token', response.body, 1);
+        this.$http.post('http://localhost:8000/login/', this.user).then((response) => {
+          console.log("sucess login", response);
+          this.$cookie.set('token', response.body, 1);
 
-        this.$router.push('user/');
-      }, function(err){
-        console.log("error :", err);
-      });
+          this.$router.push('user/');
+        }, (err) => {
+          console.log("error :", err);
+        });
       }
     },
     components:{
