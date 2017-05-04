@@ -121,11 +121,11 @@ export default{
     self.$http.get('http://localhost:8000/userinfos/').then((response) => {
       console.log(response.body)
       self.qwirkUser.copyConstructor(response.body);
-      //console.log(this.qwirkUser);
-      //console.log(this.qwirkUser.contacts[0]);
-      //console.log(this.qwirkUser.qwirkGroups);
+      console.log(self.qwirkUser);
+      //console.log(self.qwirkUser.contacts[0]);
+      //console.log(self.qwirkUser.qwirkGroups);
       self.$root.$options.qwirkUser.copyConstructor(response.body);
-      //console.log(this.$root.$options.qwirkUser)
+      //console.log(self.$root.$options.qwirkUser)
 
       var wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
       self.userSocket = new WebSocket(wsProtocol + "localhost:8000/ws/user/" + self.$cookie.get('token') + "/" + self.qwirkUser.user.username);

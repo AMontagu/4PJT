@@ -45,15 +45,16 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializerSimple(serializers.ModelSerializer):
-	#qwirkGroup = QwirkGroupSerializer(read_only=True)
 	qwirkGroup = serializers.SlugRelatedField(
 		read_only=True,
 		slug_field='name'
 	)
 
+	qwirkUser = serializers.StringRelatedField(read_only=True)
+
 	class Meta:
 		model = Message
-		fields = ('qwirkGroup', 'text', 'dateTime')
+		fields = ('qwirkGroup', 'qwirkUser', 'text', 'dateTime')
 
 
 class NotificationSerializer(serializers.ModelSerializer):

@@ -2,6 +2,33 @@
  * Created by adrie on 02/01/2017.
  */
 
+class Notification{
+  constructor() {
+    this.dateRead = null;
+    this.groupName = "";
+    this.senderName = "";
+    this.text = "";
+  }
+
+  copyConstructor(object){
+    if(typeof object == "string"){
+      object = JSON.parse(object);
+    }
+
+    /*if(object.hasOwnProperty('message')){
+      if(object.message == "string"){
+        object.message = JSON.parse(object.message);
+      }
+    }*/
+
+    //console.log(object);
+    this.dateRead = object.dateRead;
+    this.groupName = object.message.qwirkGroup;
+    this.senderName = object.message.qwirkUser;
+    this.text = object.message.text;
+  }
+}
+
 class QwirkGroup{
   constructor() {
     this.name = "";
@@ -49,6 +76,7 @@ class QwirkUser{
     this.qwirkGroups = [];
     this.bio = "";
     this.birthDate = "";
+    this.notifications = [];
   }
 
   copyConstructor(object){
@@ -63,6 +91,11 @@ class QwirkUser{
     this.birthDate = object.birthDate;
     this.qwirkGroups = object.qwirkGroups;
     this.contacts = object.contacts;
+    object.notifications.forEach((notification) => {
+      let notif = new Notification();
+      notif.copyConstructor(notification);
+      this.notifications.push(notif);
+    })
   }
 
   fillUser(user, bio, birthDate, groups, contacts){
