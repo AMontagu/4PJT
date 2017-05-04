@@ -93,7 +93,6 @@ export default{
           inputText: "",
           currentGroupName: "",
           messages: [],
-          qwirkUser: new QwirkUser(),
           groupInformations: new GroupInformations(),
           headerReady: false,
           inCall: false,
@@ -107,12 +106,6 @@ export default{
     created: function(){},
     mounted: function(){
       let self = this;
-
-      self.$http.get('http://localhost:8000/userinfos/', {headers: {'Authorization': "Token " + self.$cookie.get('token')}}).then(function(response){
-        self.qwirkUser.copyConstructor(response.body);
-      }, function(err){
-        console.log("error :", err);
-      });
 
       console.log(this.$route.params);
       self.currentGroupName = this.$route.params.name;
@@ -181,7 +174,7 @@ export default{
           this.headerReady = true;
         }else if(data.action == "call"){
           console.log("receive call from ", data.content.username);
-          if(this.qwirkUser.user.username != data.content.username && !this.inCall){
+          if(this.$root.$options.qwirkUser.user.username != data.content.username && !this.inCall){
             this.userCallUsername = data.content.username;
             this.showModal = true;
           }
@@ -278,7 +271,7 @@ export default{
         if(!this.inCall){
           this.inCall = true;
           this.connection.openOrJoin(this.currentGroupName);
-          this.socket.send(JSON.stringify({action:'call', content:{username: this.qwirkUser.user.username}}))
+          this.socket.send(JSON.stringify({action:'call', content:{username: this.$root.$options.qwirkUser.user.username}}))
         }else{
           this.connection.join(this.currentGroupName);
         }

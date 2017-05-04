@@ -15,14 +15,14 @@ from channels.generic.websockets import WebsocketConsumer, JsonWebsocketConsumer
 from django.utils.timezone import utc
 from rest_framework.authtoken.models import Token
 from channels import Group
-from project.models import QwirkGroup, Contact, QwirkUser, Message
+from project.models import QwirkGroup, Contact, QwirkUser, Message, Notification
 import json
 import time
 
 from project.serializer import MessageSerializer, QwirkUserSerializerSimple
 
 
-def checkToken(url):
+def checkToken(url, isUser):
 	if "token" in url:
 		try:
 			token = Token.objects.select_related('user').get(key=url["token"])
@@ -41,22 +41,41 @@ def checkToken(url):
 			return False, None
 		print("user " + token.user.username)
 
-		if "groupname" in url:
-			groupName = url["groupname"]
-			print("connection to group " + groupName)
-			if QwirkGroup.objects.filter(name=groupName).exists():
-				contactRelationExist = Contact.objects.filter(qwirkGroup__name=groupName,
-				                                              qwirkUser=token.user.qwirkuser).exists()  # Check if the current user logged in with token is a contact of the group he try to connect
-				print("contactRelationExist: " + str(contactRelationExist))
-				userIsInGroup = QwirkUser.objects.filter(qwirkGroups__name=groupName).exists()
-				print("userIsInGroup: " + str(userIsInGroup))
-				if contactRelationExist or userIsInGroup:
-					return True, token.user
+		if isUser:
+			return checkUser(url, token)
+		else:
+			return checkGroup(url, token)
 
-		return False, None
 	else:
 		print("No token in url")
 		return False, None
+
+
+def checkGroup(url, token):
+	if "groupname" in url:
+		groupName = url["groupname"]
+		print("connection to group " + groupName)
+		if QwirkGroup.objects.filter(name=groupName).exists():
+			contactRelationExist = Contact.objects.filter(qwirkGroup__name=groupName,
+			                                              qwirkUser=token.user.qwirkuser).exists()  # Check if the current user logged in with token is a contact of the group he try to connect
+			print("contactRelationExist: " + str(contactRelationExist))
+			userIsInGroup = QwirkUser.objects.filter(qwirkGroups__name=groupName).exists()
+			print("userIsInGroup: " + str(userIsInGroup))
+			if contactRelationExist or userIsInGroup:
+				return True, token.user
+
+	return False, None
+
+
+def checkUser(url, token):
+	if "username" in url:
+		username = url["username"]
+		print("user connected: " + username + " token belong to: " + token.user.username)
+		if token.user.username == username:
+			return True, token.user
+
+	return False, None
+
 
 class ChatJsonConsumer(JsonWebsocketConsumer):
 	"""
@@ -75,16 +94,12 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 
 	def connect(self, message, **kwargs):
 		print("connect Chat json")
-		goodTokenAndUserInGroup, user = checkToken(kwargs)
+		goodTokenAndUserInGroup, user = checkToken(kwargs, False)
 		if goodTokenAndUserInGroup:
 			self.message.reply_channel.send({"accept": True})
 		else:
 			print("not-authorized connection")
-			text = {
-				"action": "not-authorized-connection",
-			}
 			self.message.reply_channel.send({"close": True})
-
 
 	def receive(self, content, **kwargs):
 		print("receive Chat json :")
@@ -92,12 +107,12 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 
 		if "groupname" in kwargs:
 
-			goodTokenAndUserInGroup, user = checkToken(kwargs)
+			goodTokenAndUserInGroup, user = checkToken(kwargs, False)
 
 			if goodTokenAndUserInGroup:
 
 				if content["action"] == "message":
-					qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"]) # TODO check with exist or with try catch but not sur because check in connect need to be tested
+					qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"])# TODO check with exist or with try catch but not sur because check in connect need to be tested
 
 					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"])
 					message.save()
@@ -111,6 +126,31 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 					Group(kwargs["groupname"]).send({
 						"text": text,
 					})
+
+					# NOTIFICATION PART
+
+					notification = json.dumps({
+						"action": "new-message",
+						"groupname": qwirkGroup.name
+					})
+
+					if qwirkGroup.isContactGroup:
+						for contact in qwirkGroup.contact_set.all():
+							print(contact.qwirkUser)
+							notification = Notification.objects.create(message=message, qwirkUser=contact.qwirkUser)
+							notification.save()
+							Group("user" + contact.qwirkUser.user.username).send({
+								"text": notification,
+							})
+					else:
+						for qwirkUser in qwirkGroup.qwirkuser_set.all():
+							print(qwirkUser)
+							notification = Notification.objects.create(message=message, qwirkUser=qwirkUser)
+							notification.save()
+							Group("user" + qwirkUser.user.username).send({
+								"text": notification,
+							})
+
 				elif content["action"] == "call":
 					Group(kwargs["groupname"]).send({
 						"text": json.dumps(content),
@@ -163,6 +203,39 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 					self.send(text)
 		else:
 			print("no groupname in url")
+
+	def disconnect(self, message, **kwargs):
+		print("disconnect Chat json")
+
+
+class UserJsonConsumer(JsonWebsocketConsumer):
+	"""
+	Handle the groups of all the robots for broadcasting informations to all the robots
+
+	see https://channels.readthedocs.io/en/latest/generics.html
+	"""
+	http_user = True
+	# Set to True if you want them, else leave out
+	strict_ordering = False
+	slight_ordering = False
+
+	def connection_groups(self, **kwargs):
+		print("connection Chat groups json")
+		return ["user" + kwargs["username"]]
+
+	def connect(self, message, **kwargs):
+		print("connect Chat json")
+		goodTokenAndUser, user = checkToken(kwargs, True)
+		if goodTokenAndUser:
+			self.message.reply_channel.send({"accept": True})
+		else:
+			print("not-authorized connection")
+			self.message.reply_channel.send({"close": True})
+
+	def receive(self, content, **kwargs):
+		print("receive user json :")
+		print(content)
+		print("strange this consumer is only for notification to user")
 
 	def disconnect(self, message, **kwargs):
 		print("disconnect Chat json")

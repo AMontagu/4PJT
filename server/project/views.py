@@ -14,8 +14,9 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.renderers import JSONRenderer
 
-from project.models import QwirkUser, Contact, QwirkGroup
-from project.serializer import QwirkUserSerializer, QwirkUserSerializerSimple, QwirkGroupSerializer
+from project.models import QwirkUser, Contact, QwirkGroup, Notification
+from project.serializer import QwirkUserSerializer, QwirkUserSerializerSimple, QwirkGroupSerializer, \
+	NotificationSerializer
 from server import settings
 from server.customLogging import *
 
@@ -183,8 +184,23 @@ def getUserInformations(request):
 			print(field.name)"""
 		#qwirkUser = QwirkUser.objects.get(user=request.user)
 		serializer = QwirkUserSerializer(request.user.qwirkuser)
+		"""notifications = Notification.objects.filter(qwirkUser=request.user.qwirkuser)
+		print("ici")
+		for notification in notifications:
+			print(notification.qwirkUser.user.username)
+			print(notification.message.text)"""
+
+		for notification in request.user.qwirkuser.notifications.all():
+			# print(notification.qwirkUser.user.username)
+			# print(notification.message.text)
+			notifSerializer = NotificationSerializer(notification)
+			#print(notifSerializer.data)
+
+		# serializer.data['notifications'] = request.user.qwirkuser.notification_set.all()
+
 		json = JSONRenderer().render(serializer.data)
-		# print(json)
+		# print(serializer.data['notifications'])
+		print(serializer.data)
 		return HttpResponse(json, status=200)
 	else:
 		return HttpResponse(status=401)

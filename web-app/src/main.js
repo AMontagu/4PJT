@@ -7,7 +7,7 @@ import router from './router'
 
 import {QwirkUser} from '../static/js/model.js';
 let VueResource = require('vue-resource');
-var VueCookie = require('vue-cookie');
+let VueCookie = require('vue-cookie');
 // Tell Vue to use the plugin
 Vue.use(VueResource);
 Vue.use(VueCookie);
