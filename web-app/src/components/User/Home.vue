@@ -34,6 +34,7 @@
           <div v-for="contact in qwirkUser.contacts">
             <router-link :to="contact.qwirkGroup.name | groupPath">{{ contact.qwirkUser.user.username }}</router-link>
             <span :id="contact.qwirkGroup.name" class="notification"></span>
+
           </div>
         </div>
       </div>
@@ -106,7 +107,8 @@ export default{
       showModal: false,
       modalHeader: "",
       createPrivateGroup: true,
-      groupName: ""
+      groupName: "",
+      loading: true
     }
   },
   computed: {
@@ -115,7 +117,22 @@ export default{
       return this.$root.$options.qwirkUser;
     }
   },
-  created: function(){},
+  created: function(){
+    console.log("ICIIIIIIIIIIIIIIII");
+    console.log(this.qwirkUser);
+
+    if(this.loading){
+      setTimeout(() => {
+        this.qwirkUser.notifications.forEach((notification) => {
+          this.processNotification(notification);
+        })
+      }, 500)
+    }else{
+      this.qwirkUser.notifications.forEach((notification) => {
+          this.processNotification(notification);
+        })
+    }
+  },
   mounted: function(){
     let self = this;
     self.$http.get('http://localhost:8000/userinfos/').then((response) => {
@@ -124,8 +141,10 @@ export default{
       console.log(self.qwirkUser);
       //console.log(self.qwirkUser.contacts[0]);
       //console.log(self.qwirkUser.qwirkGroups);
-      self.$root.$options.qwirkUser.copyConstructor(response.body);
+      self.$root.$options.qwirkUser = self.qwirkUser;
       //console.log(self.$root.$options.qwirkUser)
+
+      self.loading = false;
 
       var wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
       self.userSocket = new WebSocket(wsProtocol + "localhost:8000/ws/user/" + self.$cookie.get('token') + "/" + self.qwirkUser.user.username);
@@ -198,6 +217,18 @@ export default{
       }, function(err){
         console.log("error :", err);
       });
+    },
+    processNotification: function(notification){
+      let el = document.getElementById(notification.groupName);
+      if(el.textContent == ""){
+        let txt = document.createTextNode("1");
+        el.innerText = txt.textContent;
+      }else{
+        let value = parseInt(el.textContent);
+        value++;
+        let txt = document.createTextNode(value.toString());
+        el.innerText = txt.textContent;
+      }
     }
   },
   filters: {
