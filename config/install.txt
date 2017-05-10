@@ -1,6 +1,42 @@
-Procédure d'installation software:
+Software installation procedure:
 
-Sur une machine Debian ou Dérivé présumé vierge faire:
+On a debian like system presumed clean and up to date :
+
+## INSTALL DEPENDENCIES
+
+sudo apt-get install python3-dev python-pip git redis-server nginx openssl
+
+sudo pip install virtualenvwrapper
+
+sudo nano ~/.bashrc 
+
+---------------- Add these lines at the end of file : ----------------
+
+export WORKON_HOME=$HOME/.virtualenvs
+
+source /usr/local/bin/virtualenvwrapper.sh
+
+----------------------------------------------------------------------
+
+source ~/.bashrc
+
+mkvirtualenv qwirk-python -p /usr/bin/python3
+
+workon qwirk-python
+
+pip install Django pytz djangorestframework channels asgi_redis uwsgi
+
+
+
+## NGINX AND SSL CONFIGURATION
+
+sudo rm /etc/nginx/sites-enabled/default
+sudo rm /etc/nginx/sites-available/default
+sudo mkdir /etc/nginx/ssl
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/server.key -out /etc/nginx/ssl/server.crt
+
+sudo nano /etc/nginx/sites-available/server.conf
+
 
 
 
