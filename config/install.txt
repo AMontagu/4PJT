@@ -4,7 +4,7 @@ On a debian like system presumed clean and up to date :
 
 ## INSTALL DEPENDENCIES
 
-sudo apt-get install python3-dev python-pip git redis-server nginx openssl
+sudo apt-get install python3-dev python-pip git redis-server nginx openssl redis-server
 
 sudo pip install virtualenvwrapper
 
@@ -24,7 +24,7 @@ mkvirtualenv qwirk-python -p /usr/bin/python3
 
 workon qwirk-python
 
-pip install Django pytz djangorestframework channels asgi_redis uwsgi
+pip install Django pytz djangorestframework channels asgi_redis uwsgi django-cors-headers
 
 
 
