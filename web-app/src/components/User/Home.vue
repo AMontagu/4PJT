@@ -8,7 +8,7 @@
                   class="unstyleBtn">{{ qwirkUser.user.username }} <span
             class="glyphicon glyphicon-chevron-down marginL20p" aria-hidden="true"></span></button>
           <ul class="dropdown-menu">
-            <li><a href="/user/profile">Profile & Account</a></li>
+            <router-link to="/user/profile" tag="li"><a>Profile & Account</a></router-link>
             <li><a v-on:click="changeConnectionStatus()">Change connection status</a></li>
             <li role="separator" class="divider"></li>
             <li><a v-on:click="logOut()">Log Out</a></li>
@@ -108,7 +108,9 @@ export default{
       modalHeader: "",
       createPrivateGroup: true,
       groupName: "",
-      loading: true
+      currentGroupName: "",
+      loading: true,
+      userSocket: null
     }
   },
   computed: {
@@ -134,41 +136,43 @@ export default{
     }
   },
   mounted: function(){
-    let self = this;
-    self.$http.get('http://localhost:8000/userinfos/').then((response) => {
+    this.currentGroupName = this.$route.params.name;
+
+    this.$http.get('http://localhost:8000/userinfos/').then((response) => {
       console.log(response.body)
-      self.qwirkUser.copyConstructor(response.body);
-      console.log(self.qwirkUser);
+      this.qwirkUser.copyConstructor(response.body);
+      console.log(this.qwirkUser);
       //console.log(self.qwirkUser.contacts[0]);
       //console.log(self.qwirkUser.qwirkGroups);
-      self.$root.$options.qwirkUser = self.qwirkUser;
+      this.$root.$options.qwirkUser = this.qwirkUser;
       //console.log(self.$root.$options.qwirkUser)
 
-      self.loading = false;
+      this.loading = false;
 
-      var wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-      self.userSocket = new WebSocket(wsProtocol + "localhost:8000/ws/user/" + self.$cookie.get('token') + "/" + self.qwirkUser.user.username);
+      let wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+      this.userSocket = new WebSocket(wsProtocol + "localhost:8000/ws/user/" + this.$cookie.get('token') + "/" + this.qwirkUser.user.username);
 
-      self.userSocket.onmessage = function (message) {
+      this.userSocket.onmessage = (message) => {
         console.log("receive message user: ", message);
 
-        var data = JSON.parse(message.data);
+        let data = JSON.parse(message.data);
         console.log(data);
 
-        if(data.action == "notification"){
+        if(data.action === "notification"){
+
           console.log(data.notification);
           let notification = new Notification();
           notification.copyConstructor(data.notification);
           console.log(notification);
-          self.processNotification(notification);
+          this.processNotification(notification);
         }
       }
 
-      self.userSocket.onopen = function () {
+      this.userSocket.onopen = () => {
         console.log("user socket open");
       };
 
-      self.userSocket.onerror = function (err) {
+      this.userSocket.onerror = (err) => {
         console.error("user socket error: ", err);
       };
 
@@ -179,13 +183,19 @@ export default{
   methods:{
     addContact: function(){
       let username = document.getElementById('searchBarText').value;
+
       console.log('username: ', username);
       console.log("token " + this.$cookie.get('token'));
+
       this.$http.post('http://localhost:8000/addcontact/', {'username': username}).then((response) => {
-        console.log("sucess add contact", response);
+
+      	console.log("sucess add contact", response);
         this.currentGroupName = response.body;
         document.getElementById('searchBarText').value = "";
+        this.$router.push('/user/' + this.currentGroupName)
+
       }, function(err){
+
         console.log("error :", err);
       });
     },
@@ -213,23 +223,31 @@ export default{
       this.$http.post('http://localhost:8000/creategroup/', data, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
         console.log("sucess create group", response);
         // TODO display message that said your modifications was good taken
+        this.currentGroupName = this.groupName;
         this.showModal = false;
-        this.$router.push(this.groupName);
-        this.showModal = false;
+        this.$router.push(this.currentGroupName);
+        this.groupName = '';
       }, function(err){
         console.log("error :", err);
       });
     },
     processNotification: function(notification){
-      let el = document.getElementById(notification.groupName);
-      if(el.textContent == ""){
-        let txt = document.createTextNode("1");
-        el.innerText = txt.textContent;
-      }else{
-        let value = parseInt(el.textContent);
-        value++;
-        let txt = document.createTextNode(value.toString());
-        el.innerText = txt.textContent;
+    	console.log("1: ", this.currentGroupName, " 2: ", notification.groupName);
+    	if(this.currentGroupName !== notification.groupName){
+
+        let el = document.getElementById(notification.groupName);
+        if(el.textContent === ""){
+
+          let txt = document.createTextNode("1");
+          el.innerText = txt.textContent;
+
+        }else{
+
+          let value = parseInt(el.textContent);
+          value++;
+          let txt = document.createTextNode(value.toString());
+          el.innerText = txt.textContent;
+        }
       }
     },
   },
@@ -247,6 +265,22 @@ export default{
     Modal,
     AutoComplete
   },
+  beforeRouteUpdate (to, from, next) {
+    //console.log(to.params.name);
+    if(typeof to.params.name !== "undefined") {
+
+    	this.currentGroupName = to.params.name;
+
+      let el = document.getElementById(to.params.name);
+
+      if (el.textContent !== "") {
+
+        let txt = document.createTextNode("");
+        el.innerText = txt.textContent;
+      }
+      next();
+    }
+  }
 }
 
 

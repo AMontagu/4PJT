@@ -107,7 +107,7 @@ export default{
     mounted: function(){
       let self = this;
 
-      console.log(this.$route.params);
+      //console.log(this.$route.params);
       self.currentGroupName = this.$route.params.name;
       if(self.currentGroupName != "" && self.currentGroupName != undefined){
         var wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
