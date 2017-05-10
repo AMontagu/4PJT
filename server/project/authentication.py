@@ -7,7 +7,6 @@ from rest_framework.authtoken.models import Token
 
 class ExpiringTokenAuthentication(TokenAuthentication):
     def authenticate_credentials(self, key):
-        print("ici2")
         model = self.get_model()
         try:
             token = model.objects.select_related('user').get(key=key)

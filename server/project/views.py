@@ -14,8 +14,9 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.renderers import JSONRenderer
 
-from project.models import QwirkUser, Contact, QwirkGroup
-from project.serializer import QwirkUserSerializer, QwirkUserSerializerSimple, QwirkGroupSerializer
+from project.models import QwirkUser, Contact, QwirkGroup, Notification
+from project.serializer import QwirkUserSerializer, QwirkUserSerializerSimple, QwirkGroupSerializer, \
+	NotificationSerializer
 from server import settings
 from server.customLogging import *
 
@@ -183,8 +184,10 @@ def getUserInformations(request):
 			print(field.name)"""
 		#qwirkUser = QwirkUser.objects.get(user=request.user)
 		serializer = QwirkUserSerializer(request.user.qwirkuser)
+
 		json = JSONRenderer().render(serializer.data)
-		# print(json)
+		# print(serializer.data['notifications'])
+		print(serializer.data)
 		return HttpResponse(json, status=200)
 	else:
 		return HttpResponse(status=401)

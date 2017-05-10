@@ -4,7 +4,9 @@
       <div id="userPart">
         <!-- Split button -->
         <div class="btn-group">
-          <button type="button" id="userNameBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn">{{ qwirkUser.user.username }} <span class="glyphicon glyphicon-chevron-down marginL20p" aria-hidden="true"></span></button>
+          <button type="button" id="userNameBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                  class="unstyleBtn">{{ qwirkUser.user.username }} <span
+            class="glyphicon glyphicon-chevron-down marginL20p" aria-hidden="true"></span></button>
           <ul class="dropdown-menu">
             <li><a href="/user/profile">Profile & Account</a></li>
             <li><a v-on:click="changeConnectionStatus()">Change connection status</a></li>
@@ -31,6 +33,8 @@
         <div class="leftNavbar">
           <div v-for="contact in qwirkUser.contacts">
             <router-link :to="contact.qwirkGroup.name | groupPath">{{ contact.qwirkUser.user.username }}</router-link>
+            <span :id="contact.qwirkGroup.name" class="notification"></span>
+
           </div>
         </div>
       </div>
@@ -42,6 +46,7 @@
         <div class="leftNavbar">
           <div v-for="group in qwirkUser.qwirkGroups" v-if="group.isPrivate">
             <router-link :to="group.name | groupPath">{{ group.name }}</router-link>
+            <span :id="group.name" class="notification"></span>
           </div>
         </div>
       </div>
@@ -53,6 +58,7 @@
         <div class="leftNavbar">
           <div v-for="group in qwirkUser.qwirkGroups" v-if="!group.isPrivate">
             <router-link :to="group.name | groupPath">{{ group.name }}</router-link>
+            <span :id="group.name" class="notification"></span>
           </div>
         </div>
       </div>
@@ -91,92 +97,158 @@
 
 <script>
 import Modal from '../shared/Modal.vue'
-import {User, QwirkUser} from '../../../static/js/model.js';
+import {User, QwirkUser, Notification} from '../../../static/js/model.js';
 import AutoComplete from '../shared/AutoComplete.vue'
 export default{
-    name:"UserHome",
-    data(){
-        return{
-          qwirkUser: new QwirkUser(),
-          showModal: false,
-          modalHeader: "",
-          createPrivateGroup: true,
-          groupName: ""
+  name:"UserHome",
+  data(){
+    return{
+      qwirkUser: new QwirkUser(),
+      showModal: false,
+      modalHeader: "",
+      createPrivateGroup: true,
+      groupName: "",
+      loading: true
+    }
+  },
+  computed: {
+    currentUser: function () {
+      //console.log(this.$root.$options);
+      return this.$root.$options.qwirkUser;
+    }
+  },
+  created: function(){
+    console.log("ICIIIIIIIIIIIIIIII");
+    console.log(this.qwirkUser);
+
+    if(this.loading){
+      setTimeout(() => {
+        this.qwirkUser.notifications.forEach((notification) => {
+          this.processNotification(notification);
+        })
+      }, 500)
+    }else{
+      this.qwirkUser.notifications.forEach((notification) => {
+          this.processNotification(notification);
+        })
+    }
+  },
+  mounted: function(){
+    let self = this;
+    self.$http.get('http://localhost:8000/userinfos/').then((response) => {
+      console.log(response.body)
+      self.qwirkUser.copyConstructor(response.body);
+      console.log(self.qwirkUser);
+      //console.log(self.qwirkUser.contacts[0]);
+      //console.log(self.qwirkUser.qwirkGroups);
+      self.$root.$options.qwirkUser = self.qwirkUser;
+      //console.log(self.$root.$options.qwirkUser)
+
+      self.loading = false;
+
+      var wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+      self.userSocket = new WebSocket(wsProtocol + "localhost:8000/ws/user/" + self.$cookie.get('token') + "/" + self.qwirkUser.user.username);
+
+      self.userSocket.onmessage = function (message) {
+        console.log("receive message user: ", message);
+
+        var data = JSON.parse(message.data);
+        console.log(data);
+
+        if(data.action == "notification"){
+          console.log(data.notification);
+          let notification = new Notification();
+          notification.copyConstructor(data.notification);
+          console.log(notification);
+          self.processNotification(notification);
         }
+      }
+
+      self.userSocket.onopen = function () {
+        console.log("user socket open");
+      };
+
+      self.userSocket.onerror = function (err) {
+        console.error("user socket error: ", err);
+      };
+
+    }, (err) => {
+      console.log("error :", err);
+    });
+  },
+  methods:{
+    addContact: function(){
+      let username = document.getElementById('searchBarText').value;
+      console.log('username: ', username);
+      console.log("token " + this.$cookie.get('token'));
+      this.$http.post('http://localhost:8000/addcontact/', {'username': username}).then((response) => {
+        console.log("sucess add contact", response);
+        this.currentGroupName = response.body;
+        document.getElementById('searchBarText').value = "";
+      }, function(err){
+        console.log("error :", err);
+      });
     },
-    created: function(){
-      self.$http.get('http://localhost:8000/userinfos/').then((response) => {
-          self.qwirkUser.copyConstructor(response.body);
-          //console.log(this.qwirkUser);
-          //console.log(this.qwirkUser.contacts[0]);
-          //console.log(this.qwirkUser.qwirkGroups);
-        }, function(err){
-          console.log("error :", err);
-        });
+    logOut: function(){
+      this.$cookie.delete('token');
+      //console.log(this.$cookie.get('token'))
+      this.$router.push('/');
     },
-    mounted: function(){},
-    methods:{
-      addContact: function(){
-        self = this;
-        let username = document.getElementById('searchBarText').value;
-        console.log('username: ', username);
-        console.log("token " + self.$cookie.get('token'));
-        self.$http.post('http://localhost:8000/addcontact/', {'username': username}, {headers: {'Authorization': "Token " + self.$cookie.get('token')}}).then(function(response){
-          console.log("sucess add contact", response);
-          self.currentGroupName = response.body;
-          document.getElementById('searchBarText').value = "";
-        }, function(err){
-          console.log("error :", err);
-        });
-      },
-      logOut: function(){
-        this.$cookie.delete('token');
-        //console.log(this.$cookie.get('token'))
-        this.$router.push('/');
-      },
-      changeConnectionStatus: function(){
-        console.log("user want to change it's connection status")
-      },
-      showAddGroup: function(){
-        this.modalHeader = "group";
-        this.createPrivateGroup = true;
-        this.showModal = true;
-      },
-      showAddChannel: function(){
-        this.modalHeader = "channel";
-        this.createPrivateGroup = false;
-        this.showModal = true;
-      },
-      createGroup: function(){
-        // TODO check if name exist
-        let self = this;
-        let data = {groupName: this.groupName, isPrivate: this.createPrivateGroup};
-        this.$http.post('http://localhost:8000/creategroup/', data, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
-          console.log("sucess create group", response);
-          // TODO display message that said your modifications was good taken
-          self.showModal = false;
-          self.$router.push(self.groupName);
-          self.showModal = false;
-        }, function(err){
-          console.log("error :", err);
-        });
+    changeConnectionStatus: function(){
+      console.log("user want to change it's connection status")
+    },
+    showAddGroup: function(){
+      this.modalHeader = "group";
+      this.createPrivateGroup = true;
+      this.showModal = true;
+    },
+    showAddChannel: function(){
+      this.modalHeader = "channel";
+      this.createPrivateGroup = false;
+      this.showModal = true;
+    },
+    createGroup: function(){
+      // TODO check if name exist
+      let data = {groupName: this.groupName, isPrivate: this.createPrivateGroup};
+      this.$http.post('http://localhost:8000/creategroup/', data, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+        console.log("sucess create group", response);
+        // TODO display message that said your modifications was good taken
+        this.showModal = false;
+        this.$router.push(this.groupName);
+        this.showModal = false;
+      }, function(err){
+        console.log("error :", err);
+      });
+    },
+    processNotification: function(notification){
+      let el = document.getElementById(notification.groupName);
+      if(el.textContent == ""){
+        let txt = document.createTextNode("1");
+        el.innerText = txt.textContent;
+      }else{
+        let value = parseInt(el.textContent);
+        value++;
+        let txt = document.createTextNode(value.toString());
+        el.innerText = txt.textContent;
       }
     },
-    filters: {
-      groupPath: function (name) {
-        return '/user/' + name;
-      }
-    },
-    watch: {
-      searchBarText: function (name) {
-        //console.log(name);
-      }
-    },
-    components:{
-      Modal,
-      AutoComplete
-    },
+  },
+  filters: {
+    groupPath: function (name) {
+      return '/user/' + name;
+    }
+  },
+  watch: {
+    searchBarText: function (name) {
+      //console.log(name);
+    }
+  },
+  components:{
+    Modal,
+    AutoComplete
+  },
 }
+
 
 </script>
 
@@ -286,4 +358,5 @@ export default{
     background-color: #555;
     color: white;
   }
+
 </style>
