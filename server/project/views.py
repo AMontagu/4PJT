@@ -1,6 +1,7 @@
 from datetime import datetime
 from importlib import import_module
 
+from channels import Group
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse
@@ -14,11 +15,12 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.renderers import JSONRenderer
 
-from project.models import QwirkUser, Contact, QwirkGroup, Notification
+from project.models import QwirkUser, Contact, QwirkGroup, Notification, Message
 from project.serializer import QwirkUserSerializer, QwirkUserSerializerSimple, QwirkGroupSerializer, \
-	NotificationSerializer
+	NotificationSerializer, ContactSerializer, NotificationSerializerSimple
 from server import settings
 from server.customLogging import *
+import json
 
 
 @api_view(['POST'])
@@ -148,14 +150,19 @@ def isLoggedIn(request):
 def addContact(request):
 	if request.user is not None:
 		username = request.data['username']
+		# textMessage = request.data['textMessage']
+		textMessage = "Would you be my friend ?"
 		userContact = User.objects.get(username=username)
 		if userContact is None:
 			email = username
 			userContact = User.objects.get(email=email)
 		if userContact is not None:
 			if request.user.qwirkuser.contacts.filter(qwirkUser=userContact.qwirkuser).exists():
+				contact = request.user.qwirkuser.contacts.get(qwirkUser=userContact.qwirkuser)
 				print("user have already this user as contact")
-				return HttpResponse("Already in contact", status=200)
+				serializer = ContactSerializer(contact)
+				jsonResponse = JSONRenderer().render(serializer.data)
+				return HttpResponse(jsonResponse, status=200)
 			else:
 				qwirkGroup = QwirkGroup(name=userContact.username+"-"+request.user.username, isPrivate=True, isContactGroup=True)
 				qwirkGroup.save()
@@ -169,7 +176,29 @@ def addContact(request):
 				request.user.qwirkuser.contacts.add(newContact)
 				userContact.qwirkuser.contacts.add(newContact2)
 				print("added " + newContact.qwirkUser.user.username)
-				return HttpResponse(qwirkGroup.name, status=200)
+
+				message = Message.objects.create(qwirkUser=request.user.qwirkuser, qwirkGroup=qwirkGroup,
+												 text=textMessage)
+				message.save()
+
+				notification = Notification.objects.create(message=message, qwirkUser=userContact.qwirkuser)
+				notification.save()
+
+				contactSerializer = ContactSerializer(newContact2)
+				notificationSerializer = NotificationSerializerSimple(notification)
+
+				text = json.dumps({
+					"action": "newDemand",
+					"contact": contactSerializer.data,
+					"notification": notificationSerializer.data
+				})
+				Group("user" + userContact.username).send({
+					"text": text,
+				})
+
+				serializer = ContactSerializer(newContact)
+				jsonResponse = JSONRenderer().render(serializer.data)
+				return HttpResponse(jsonResponse, status=200)
 		else:
 			LOGINFO("No contact with this username/email " + username)
 			return HttpResponse(status=400)
@@ -185,10 +214,10 @@ def getUserInformations(request):
 		#qwirkUser = QwirkUser.objects.get(user=request.user)
 		serializer = QwirkUserSerializer(request.user.qwirkuser)
 
-		json = JSONRenderer().render(serializer.data)
+		jsonResponse = JSONRenderer().render(serializer.data)
 		# print(serializer.data['notifications'])
 		print(serializer.data)
-		return HttpResponse(json, status=200)
+		return HttpResponse(jsonResponse, status=200)
 	else:
 		return HttpResponse(status=401)
 
@@ -201,9 +230,9 @@ def getSimpleUserInformations(request):
 			print(field.name)"""
 		# qwirkUser = QwirkUser.objects.get(user=request.user)
 		serializer = QwirkUserSerializerSimple(request.user.qwirkuser)
-		json = JSONRenderer().render(serializer.data)
-		# print(json)
-		return HttpResponse(json, status=200)
+		jsonResponse = JSONRenderer().render(serializer.data)
+		# print(jsonResponse)
+		return HttpResponse(jsonResponse, status=200)
 	else:
 		return HttpResponse(status=401)
 
@@ -239,12 +268,12 @@ def addUserToGroup(request):
 		if qwirkGroup in request.user.qwirkuser.qwirkGroups.all():
 			userToAdd.qwirkuser.qwirkGroups.add(qwirkGroup)
 			# TODO add to admin
-			json = JSONRenderer().render({'status': 'success'})
-			return HttpResponse(json, status=200)
+			jsonResponse = JSONRenderer().render({'status': 'success'})
+			return HttpResponse(jsonResponse, status=200)
 		else:
 			print("user not authorized to add someone")
-			json = JSONRenderer().render({'status': 'error', 'text': 'You need to be admin for add an user to the group'})
-			return HttpResponse(json, status=403)
+			jsonResponse = JSONRenderer().render({'status': 'error', 'text': 'You need to be admin for add an user to the group'})
+			return HttpResponse(jsonResponse, status=403)
 	else:
 		return HttpResponse(status=401)
 
@@ -258,8 +287,8 @@ def userAutocomplete(request):
 
 	# Don't forget to filter out results depending on the visitor !
 	if not request.user.is_authenticated():
-		json = JSONRenderer().render({"error": "authorization fail"})
-		return HttpResponse(json, status=401)
+		jsonResponse = JSONRenderer().render({"error": "authorization fail"})
+		return HttpResponse(jsonResponse, status=401)
 
 	qs = User.objects.all()
 
@@ -285,6 +314,6 @@ def userAutocomplete(request):
 			userSerialized[result.username] = dict()
 			userSerialized[result.username]["username"] = result.username
 
-	json = JSONRenderer().render(userSerialized)
-	print(json)
-	return HttpResponse(json, status=200)
+	jsonResponse = JSONRenderer().render(userSerialized)
+	print(jsonResponse)
+	return HttpResponse(jsonResponse, status=200)

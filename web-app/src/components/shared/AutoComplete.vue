@@ -211,16 +211,19 @@
         this.onSelect ? this.onSelect(clean) : null
       },
       getData(val){
-        let self = this;
         if (val.length < this.min) return;
         if(this.url != null){
           // Callback Event
-          let self = this;
-          if (this.$cookie.get('token') == null){
+          if (this.$cookie.get('token') === null){
             location.href = '/';
           }else{
-            this.$http.get(this.url, {params:  {q: val}, headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
-              self.json = JSON.parse(response.data);
+            this.$http.get(this.url, {params:  {q: val}, headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+              if(typeof response.data === 'object'){
+                this.json = response.data;
+              }else{
+              	this.json = JSON.parse(response.data);
+              }
+
             });
           }
         }

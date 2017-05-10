@@ -149,18 +149,19 @@ export default{
       },
       socketError: function(err){
         console.log("ERROR : ", err);
+        window.location.href = "/user";
       },
       socketMessage: function(message){
         let self = this;
-        var data = JSON.parse(message.data);
-        console.log(data);
-        if(data.action == "new-message"){
+        let data = JSON.parse(message.data);
+        //console.log(data);
+        if(data.action === "new-message"){
           this.messages.push(JSON.parse(data.content));
           //console.log(this.messages);
           setTimeout(function(){
             self.scrollUpdated()
           }, 200);
-        }else if(data.action == "saved-messages"){
+        }else if(data.action === "saved-messages"){
           //console.log(data.content)
           this.messages = this.messages.concat(JSON.parse(data.content).reverse());
           //console.log(this.messages);
@@ -168,13 +169,13 @@ export default{
           setTimeout(function(){
             self.scrollUpdated()
           }, 300);
-        }else if(data.action == "group-informations"){
+        }else if(data.action === "group-informations"){
           //console.log(data.content)
           this.groupInformations.copyConstructor(data.content);
           this.headerReady = true;
-        }else if(data.action == "call"){
+        }else if(data.action === "call"){
           console.log("receive call from ", data.content.username);
-          if(this.$root.$options.qwirkUser.user.username != data.content.username && !this.inCall){
+          if(this.$root.$options.qwirkUser.user.username !== data.content.username && !this.inCall){
             this.userCallUsername = data.content.username;
             this.showModal = true;
           }

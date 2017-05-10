@@ -29,6 +29,24 @@ class Notification{
   }
 }
 
+class Contact{
+  constructor(){
+    this.qwirkGroup = new QwirkGroup();
+    this.qwirkUser = new QwirkUser();
+    this.status = "";
+  }
+
+  copyConstructor(object){
+    if(typeof object === "string"){
+      object = JSON.parse(object);
+    }
+
+    this.qwirkGroup = object.qwirkGroup;
+    this.qwirkUser.copyConstructor(object.qwirkUser);
+    this.status = object.status;
+  }
+}
+
 class QwirkGroup{
   constructor() {
     this.name = "";
@@ -48,7 +66,7 @@ class User{
   }
 
   copyConstructor(object){
-    if(typeof object == "string"){
+    if(typeof object === "string"){
       object = JSON.parse(object);
     }
     //console.log(object);
@@ -91,11 +109,14 @@ class QwirkUser{
     this.birthDate = object.birthDate;
     this.qwirkGroups = object.qwirkGroups;
     this.contacts = object.contacts;
-    object.notifications.forEach((notification) => {
-      let notif = new Notification();
-      notif.copyConstructor(notification);
-      this.notifications.push(notif);
-    })
+
+    if(typeof object.notifications !== 'undefined' && object.notifications.length > 0){
+      object.notifications.forEach((notification) => {
+        let notif = new Notification();
+        notif.copyConstructor(notification);
+        this.notifications.push(notif);
+      })
+    }
   }
 
   fillUser(user, bio, birthDate, groups, contacts){
@@ -120,6 +141,26 @@ class QwirkUser{
   checkBeforeLogin(){
     return this.user.checkBeforeLogin()
 
+  }
+
+  existContact(newContact){
+    for(let i=0; i < this.contacts.length; i++){
+      if(newContact.qwirkGroup.name === this.contacts[i].qwirkGroup.name){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  existGroup(newGroup){
+    for(let i=0; i < this.qwirkGroups.length; i++){
+      if(newGroup.name === this.qwirkGroups[i].name){
+
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 
@@ -171,4 +212,4 @@ class GroupInformations{
 
 }
 
-export { User, QwirkUser, QwirkGroup, Message, GroupInformations, Notification };
+export { User, QwirkUser, QwirkGroup, Message, GroupInformations, Notification, Contact };
