@@ -146,7 +146,9 @@ class QwirkUser {
   existContact(newContact) {
     for (let i = 0; i < this.contacts.length; i++) {
       if (newContact.qwirkGroup.name === this.contacts[i].qwirkGroup.name) {
-        return true;
+        if(this.contacts[i].status !== "Refuse"){
+          return true;
+        }
       }
     }
     return false;

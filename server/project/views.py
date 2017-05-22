@@ -159,46 +159,55 @@ def addContact(request):
 		if userContact is not None:
 			if request.user.qwirkuser.contacts.filter(qwirkUser=userContact.qwirkuser).exists():
 				contact = request.user.qwirkuser.contacts.get(qwirkUser=userContact.qwirkuser)
+				contactAsked = userContact.qwirkuser.contacts.get(qwirkUser=request.user.qwirkuser)
 				print("user have already this user as contact")
-				serializer = ContactSerializer(contact)
-				jsonResponse = JSONRenderer().render(serializer.data)
-				return HttpResponse(jsonResponse, status=200)
+				if contact.status == "Block" or contact.status == "Block":
+					print("user blocked")
+					jsonResponse = JSONRenderer().render(
+						{'status': 'error', 'text': 'This user is bocked'})
+					return HttpResponse(jsonResponse, status=403)
+				contact.status = "Asking"
+				contact.save()
+				contactAsked.status = "Pending"
+				contactAsked.save()
+
+				qwirkGroup = QwirkGroup.objects.get(name=userContact.username+"-"+request.user.username)
 			else:
 				qwirkGroup = QwirkGroup(name=userContact.username+"-"+request.user.username, isPrivate=True, isContactGroup=True)
 				qwirkGroup.save()
-				qwirkGroup.admin.add(request.user.qwirkuser)
-				qwirkGroup.admin.add(userContact.qwirkuser)
+				qwirkGroup.admins.add(request.user.qwirkuser)
+				qwirkGroup.admins.add(userContact.qwirkuser)
 
-				newContact = Contact.objects.create(qwirkUser=userContact.qwirkuser, status="Asking", qwirkGroup=qwirkGroup)
-				newContact.save()
-				newContact2 = Contact.objects.create(qwirkUser=request.user.qwirkuser, status="Pending", qwirkGroup=qwirkGroup)
-				newContact2.save()
-				request.user.qwirkuser.contacts.add(newContact)
-				userContact.qwirkuser.contacts.add(newContact2)
-				print("added " + newContact.qwirkUser.user.username)
+				contact = Contact.objects.create(qwirkUser=userContact.qwirkuser, status="Asking", qwirkGroup=qwirkGroup)
+				contact.save()
+				contactAsked = Contact.objects.create(qwirkUser=request.user.qwirkuser, status="Pending", qwirkGroup=qwirkGroup)
+				contactAsked.save()
+				request.user.qwirkuser.contacts.add(contact)
+				userContact.qwirkuser.contacts.add(contactAsked)
+				print("added " + contact.qwirkUser.user.username)
 
-				message = Message.objects.create(qwirkUser=request.user.qwirkuser, qwirkGroup=qwirkGroup,
-												 text=textMessage, type="requestMessage")
-				message.save()
+			message = Message.objects.create(qwirkUser=request.user.qwirkuser, qwirkGroup=qwirkGroup,
+											 text=textMessage, type="requestMessage")
+			message.save()
 
-				notification = Notification.objects.create(message=message, qwirkUser=userContact.qwirkuser)
-				notification.save()
+			notification = Notification.objects.create(message=message, qwirkUser=userContact.qwirkuser)
+			notification.save()
 
-				contactSerializer = ContactSerializer(newContact2)
-				notificationSerializer = NotificationSerializerSimple(notification)
+			contactSerializer = ContactSerializer(contactAsked)
+			notificationSerializer = NotificationSerializerSimple(notification)
 
-				text = json.dumps({
-					"action": "newDemand",
-					"contact": contactSerializer.data,
-					"notification": notificationSerializer.data
-				})
-				Group("user" + userContact.username).send({
-					"text": text,
-				})
+			text = json.dumps({
+				"action": "newDemand",
+				"contact": contactSerializer.data,
+				"notification": notificationSerializer.data
+			})
+			Group("user" + userContact.username).send({
+				"text": text,
+			})
 
-				serializer = ContactSerializer(newContact)
-				jsonResponse = JSONRenderer().render(serializer.data)
-				return HttpResponse(jsonResponse, status=200)
+			serializer = ContactSerializer(contact)
+			jsonResponse = JSONRenderer().render(serializer.data)
+			return HttpResponse(jsonResponse, status=200)
 		else:
 			LOGINFO("No contact with this username/email " + username)
 			return HttpResponse(status=400)
@@ -244,11 +253,23 @@ def createGroup(request):
 
 		qwirkGroup = QwirkGroup(name=groupName, isPrivate=isPrivate, isContactGroup=False)
 		qwirkGroup.save()
-		qwirkGroup.admin.add(request.user.qwirkuser)
+		qwirkGroup.admins.add(request.user.qwirkuser)
 
 		request.user.qwirkuser.qwirkGroups.add(qwirkGroup)
 
 		return HttpResponse(status=201)
+	else:
+		return HttpResponse(status=401)
+
+@api_view(['POST'])
+def removeGroup(request):
+	if request.user is not None:
+		groupName = request.data['groupName']
+
+		qwirkGroup = QwirkGroup.objects.filter(name=groupName)
+		qwirkGroup.delete()
+
+		return HttpResponse(status=204)
 	else:
 		return HttpResponse(status=401)
 
@@ -265,10 +286,16 @@ def addUserToGroup(request):
 		userToAdd = User.objects.get(username=userName)
 
 		if qwirkGroup in request.user.qwirkuser.qwirkGroups.all():
-			userToAdd.qwirkuser.qwirkGroups.add(qwirkGroup)
-			# TODO add to admin
-			jsonResponse = JSONRenderer().render({'status': 'success'})
-			return HttpResponse(jsonResponse, status=200)
+			if userToAdd not in qwirkGroup.blockedUsers:
+				userToAdd.qwirkuser.qwirkGroups.add(qwirkGroup)
+				# TODO add to admin
+				jsonResponse = JSONRenderer().render({'status': 'success'})
+				return HttpResponse(jsonResponse, status=200)
+			else:
+				print("user blocked")
+				jsonResponse = JSONRenderer().render(
+					{'status': 'error', 'text': 'This user is bocked for this group'})
+				return HttpResponse(jsonResponse, status=403)
 		else:
 			print("user not authorized to add someone")
 			jsonResponse = JSONRenderer().render({'status': 'error', 'text': 'You need to be admin for add an user to the group'})

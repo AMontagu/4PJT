@@ -190,7 +190,7 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 					groupInfo["isPrivate"] = qwirkGroup.isPrivate
 					groupInfo["isContactGroup"] = qwirkGroup.isContactGroup
 
-					if user.qwirkuser in qwirkGroup.admin.all():
+					if user.qwirkuser in qwirkGroup.admins.all():
 						groupInfo["isAdmin"] = True
 					else:
 						groupInfo["isAdmin"] = False
@@ -214,31 +214,39 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 						"content": json.dumps(groupInfo)
 					}
 					self.send(text)
-				elif content["action"] == "ask-again-contact-request":
-					if qwirkGroup.isContactGroup:
-						contacts = qwirkGroup.contact_set.all()
-						for contact in contacts:
-							if contact.qwirkUser.user.username != user.username:
-								contact.status = "Pending"
-							else:
-								contact.status = "Asking"
-							contact.save()
 				elif content["action"] == "accept-contact-request":
 					if qwirkGroup.isContactGroup:
 						contacts = qwirkGroup.contact_set.all()
 						for contact in contacts:
 							contact.status = "Friend"
 							contact.save()
+
+						requestMessage = qwirkGroup.message_set.get(type='requestMessage')
+						requestMessage.type = "acceptMessage"
+						requestMessage.save()
 				elif content["action"] == "decline-contact-request":
 					if qwirkGroup.isContactGroup:
 						contacts = qwirkGroup.contact_set.all()
 						for contact in contacts:
 							contact.status = "Refuse"
 							contact.save()
+
+						requestMessage = qwirkGroup.message_set.get(type='requestMessage')
+						requestMessage.type = "refuseMessage"
+						requestMessage.save()
 				elif content["action"] == "remove-contact":
 					qwirkGroup.delete()
 				elif content["action"] == "block-contact":
-					pass
+					if qwirkGroup.isContactGroup:
+						contacts = qwirkGroup.contact_set.all()
+						for contact in contacts:
+							contact.status = "Block"
+							contact.save()
+					else:
+						username = content["content"]["username"]
+						userToBlock = QwirkUser.objects.get(user__username=username)
+						qwirkGroup.blockedUsers.add(userToBlock)
+
 		else:
 			print("no groupname in url")
 

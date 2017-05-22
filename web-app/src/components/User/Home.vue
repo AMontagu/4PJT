@@ -32,9 +32,10 @@
         <h3>Contacts</h3>
         <div class="leftNavbar">
           <div v-for="contact in qwirkUser.contacts">
-            <router-link :to="contact.qwirkGroup.name | groupPath">{{ contact.qwirkUser.user.username }}</router-link>
-            <span :id="contact.qwirkGroup.name" class="notification"></span>
-
+            <div v-if="contact.status != 'Refuse' && contact.status != 'Block'">
+              <router-link :to="contact.qwirkGroup.name | groupPath">{{ contact.qwirkUser.user.username }}</router-link>
+              <span :id="contact.qwirkGroup.name" class="notification"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -141,10 +142,10 @@ export default{
       //console.log(response.body)
       this.qwirkUser.copyConstructor(response.body);
       //console.log(this.qwirkUser);
-      //console.log(self.qwirkUser.contacts[0]);
-      //console.log(self.qwirkUser.qwirkGroups);
+      //console.log(this.qwirkUser.contacts);
+      //console.log(this.qwirkUser.qwirkGroups);
       this.$root.$options.qwirkUser = this.qwirkUser;
-      //console.log(self.$root.$options.qwirkUser)
+      //console.log(this.$root.$options.qwirkUser)
 
       this.loading = false;
 
@@ -175,6 +176,8 @@ export default{
           if (!this.qwirkUser.existContact(contact)) {
             this.qwirkUser.contacts.push(contact);
           }
+
+
 
           let notification = new Notification();
           notification.copyConstructor(data.notification);

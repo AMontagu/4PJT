@@ -25,7 +25,7 @@
             <li v-if="groupInformations.isAdmin"><a v-on:click="removeGroup()">Remove {{groupInformations.titleGroupName}}</a></li>
           </ul>
           <ul v-else class="dropdown-menu" style="left: -125px;">
-            <li v-if="groupInformations.isAdmin"><a v-on:click="removeGroup()">Remove relationship</a></li>
+            <li><a v-on:click="removeGroup()">Remove relationship</a></li>
           </ul>
         </div>
       </div>
@@ -126,7 +126,10 @@ export default{
         }
       },
       removeGroup: function () {
-
+        this.$http.post(this.$root.server + '/removegroup/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+          console.log("successfully deleted ", this.currentGroupName);
+          this.$router.go('/user/');
+        });
       },
       emitCallWebRTC: function(){
         this.$emit("callWebRTC");
@@ -140,8 +143,7 @@ export default{
     },
     watch: {
       '$route' (to, from) {
-        let self = this;
-        self.currentGroupName = this.$route.params.name;
+        this.currentGroupName = this.$route.params.name;
       }
     },
     components:{
