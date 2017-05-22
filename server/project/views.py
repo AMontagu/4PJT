@@ -178,7 +178,7 @@ def addContact(request):
 				print("added " + newContact.qwirkUser.user.username)
 
 				message = Message.objects.create(qwirkUser=request.user.qwirkuser, qwirkGroup=qwirkGroup,
-												 text=textMessage)
+												 text=textMessage, type="requestMessage")
 				message.save()
 
 				notification = Notification.objects.create(message=message, qwirkUser=userContact.qwirkuser)
@@ -216,7 +216,6 @@ def getUserInformations(request):
 
 		jsonResponse = JSONRenderer().render(serializer.data)
 		# print(serializer.data['notifications'])
-		print(serializer.data)
 		return HttpResponse(jsonResponse, status=200)
 	else:
 		return HttpResponse(status=401)
@@ -298,15 +297,15 @@ def userAutocomplete(request):
 		qsStart = qs.filter(username__istartswith=q)
 		qsSearch = qs.filter(username__icontains=q)
 
-		print(qsSearch)
+		# print(qsSearch)
 
 		for result in qsStart:
-			print(result)
+			# print(result)
 			userSerialized[result.username] = dict()
 			userSerialized[result.username]["username"] = result.username
 
 		for result in qsSearch:
-			print(result)
+			# print(result)
 			userSerialized[result.username] = dict()
 			userSerialized[result.username]["username"] = result.username
 	else:

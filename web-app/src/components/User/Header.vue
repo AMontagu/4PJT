@@ -16,13 +16,16 @@
       </div>
       <div class="rightHeader">
         <span v-if="!inCall" class="glyphicon glyphicon glyphicon-earphone qwirkHeaderIcon" aria-hidden="true" v-on:click="emitCallWebRTC()"></span>
-        <span class="glyphicon glyphicon-plus qwirkHeaderIcon" aria-hidden="true" v-on:click="showAddUser()"></span>
+        <span v-if="!groupInformations.isContactGroup" class="glyphicon glyphicon-plus qwirkHeaderIcon" aria-hidden="true" v-on:click="showAddUser()"></span>
         <div class="btn-group">
           <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><span class="glyphicon glyphicon-cog qwirkHeaderIcon" aria-hidden="true"></span></button>
-          <ul class="dropdown-menu" style="left: -125px;">
-            <li><a v-on:click="changeConnectionStatus()">Leave {{groupInformations.titleGroupName}}</a></li>
+          <ul v-if="!groupInformations.isContactGroup" class="dropdown-menu" style="left: -125px;">
+            <li><a v-on:click="quitGroup()">Leave {{groupInformations.titleGroupName}}</a></li>
             <li v-if="groupInformations.isAdmin" role="separator" class="divider"></li>
-            <li v-if="groupInformations.isAdmin"><a v-on:click="logOut()">Remove {{groupInformations.titleGroupName}}</a></li>
+            <li v-if="groupInformations.isAdmin"><a v-on:click="removeGroup()">Remove {{groupInformations.titleGroupName}}</a></li>
+          </ul>
+          <ul v-else class="dropdown-menu" style="left: -125px;">
+            <li v-if="groupInformations.isAdmin"><a v-on:click="removeGroup()">Remove relationship</a></li>
           </ul>
         </div>
       </div>
@@ -106,22 +109,24 @@ export default{
         this.showModal = true;
       },
       addUser: function(){
-        let self = this;
-        if(self.usernameUser != ""){
-          self.$http.post('http://localhost:8000/addusertogroup/', {groupName: self.currentGroupName, username: self.usernameUser, isAdmin: self.adminUser}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then(function(response){
+        if(this.usernameUser != ""){
+          this.$http.post(this.$root.server + 'addusertogroup/', {groupName: this.currentGroupName, username: this.usernameUser, isAdmin: this.adminUser}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
             console.log("sucess request add user to group/channels", response);
             let data = JSON.parse(response.body);
             console.log(data);
             if(data["status"] == "success"){
-              self.showModal = false;
+              this.showModal = false;
             }else{
-              self.errorUsername = data["text"];
+              this.errorUsername = data["text"];
             }
           })
         }
         else{
-          self.errorUserName = "Please enter a username or close";
+          this.errorUserName = "Please enter a username or close";
         }
+      },
+      removeGroup: function () {
+
       },
       emitCallWebRTC: function(){
         this.$emit("callWebRTC");

@@ -55,7 +55,8 @@ export default{
       signIn: function(){
         console.log(this.qwirkUser);
         if(this.qwirkUser.checkBeforeSignIn(this.confirmPassword)){
-          this.$http.post('http://localhost:8000/signin/', this.qwirkUser).then((response) => {
+
+          this.$http.post(this.$root.server + '/signin/', this.qwirkUser).then((response) => {
             console.log("sucess signin", response);
             this.$cookie.set('token', response.body, 1);
             this.$router.push('user/');

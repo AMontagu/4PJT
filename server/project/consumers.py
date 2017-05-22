@@ -113,11 +113,10 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 			goodTokenAndUserInGroup, user = checkToken(kwargs, False)
 
 			if goodTokenAndUserInGroup:
+				qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"])  # TODO check with exist or with try catch but not sur because check in connect need to be tested
 
 				if content["action"] == "message":
-					qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"])# TODO check with exist or with try catch but not sur because check in connect need to be tested
-
-					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"])
+					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"], type="message")
 					message.save()
 
 					messageSerialized = MessageSerializer(message)
@@ -185,11 +184,6 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 					}
 					self.send(text)
 				elif content["action"] == "get-group-informations":
-					groupName = kwargs["groupname"]
-
-					print(groupName)
-
-					qwirkGroup = QwirkGroup.objects.get(name=groupName)
 
 					groupInfo = dict()
 
@@ -209,6 +203,7 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 							if contact.qwirkUser.user.username != user.username:
 								groupInfo["titleGroupName"] = contact.qwirkUser.user.username
 								groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(contact.qwirkUser).data)
+								groupInfo["statusContact"] = contact.status
 					else:
 						qwirkUsers = qwirkGroup.qwirkuser_set.all()
 						for qwirkUser in qwirkUsers:
@@ -219,6 +214,31 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 						"content": json.dumps(groupInfo)
 					}
 					self.send(text)
+				elif content["action"] == "ask-again-contact-request":
+					if qwirkGroup.isContactGroup:
+						contacts = qwirkGroup.contact_set.all()
+						for contact in contacts:
+							if contact.qwirkUser.user.username != user.username:
+								contact.status = "Pending"
+							else:
+								contact.status = "Asking"
+							contact.save()
+				elif content["action"] == "accept-contact-request":
+					if qwirkGroup.isContactGroup:
+						contacts = qwirkGroup.contact_set.all()
+						for contact in contacts:
+							contact.status = "Friend"
+							contact.save()
+				elif content["action"] == "decline-contact-request":
+					if qwirkGroup.isContactGroup:
+						contacts = qwirkGroup.contact_set.all()
+						for contact in contacts:
+							contact.status = "Refuse"
+							contact.save()
+				elif content["action"] == "remove-contact":
+					qwirkGroup.delete()
+				elif content["action"] == "block-contact":
+					pass
 		else:
 			print("no groupname in url")
 

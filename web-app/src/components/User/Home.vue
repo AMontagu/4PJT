@@ -18,7 +18,7 @@
       <div id="searchPart">
 
         <autoComplete
-          url="http://localhost:8000/user-autocomplete/"
+          :url="this.$root.server + '/user-autocomplete/'"
           anchor="username"
           placeholder="username"
           class-name="inputText inputSearch"
@@ -137,7 +137,7 @@ export default{
   	console.log("route name : ", this.$route.params.name)
     this.currentGroupName = this.$route.params.name;
 
-    this.$http.get('http://localhost:8000/userinfos/').then((response) => {
+    this.$http.get(this.$root.server + '/userinfos/').then((response) => {
       //console.log(response.body)
       this.qwirkUser.copyConstructor(response.body);
       //console.log(this.qwirkUser);
@@ -148,8 +148,7 @@ export default{
 
       this.loading = false;
 
-      let wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-      this.userSocket = new WebSocket(wsProtocol + "localhost:8000/ws/user/" + this.$cookie.get('token') + "/" + this.qwirkUser.user.username);
+      this.userSocket = new WebSocket(this.$root.wssServer + '/ws/user/' + this.$cookie.get('token') + '/' + this.qwirkUser.user.username);
 
       this.userSocket.onmessage = (message) => {
         //console.log("receive message user: ", message);
@@ -200,7 +199,7 @@ export default{
     addContact: function(){
       let username = document.getElementById('searchBarText').value;
 
-      this.$http.post('http://localhost:8000/addcontact/', {'username': username}).then((response) => {
+      this.$http.post(this.$root.server + '/addcontact/', {'username': username}).then((response) => {
 
       	console.log("sucess add contact", response.data);
 
@@ -263,7 +262,7 @@ export default{
       });
     },
     processNotification: function(notification){
-    	console.log("1: ", this.currentGroupName, " 2: ", notification.groupName);
+    	//console.log("1: ", this.currentGroupName, " 2: ", notification.groupName);
     	if(this.currentGroupName !== notification.groupName){
 
         let el = document.getElementById(notification.groupName);
@@ -281,8 +280,27 @@ export default{
             el.innerText = txt.textContent;
           }
         }else{
-          let els = document.getElementsByClassName('notification');
-          console.log(els);
+        	setTimeout(() => {
+            let els = document.getElementsByClassName('notification');
+
+            for(let i=0; i< els.length; i++){
+              if(els[i].id === notification.groupName){
+                if (els[i].textContent === "") {
+
+                  let txt = document.createTextNode("1");
+                  els[i].innerText = txt.textContent;
+
+                } else {
+
+                  let value = parseInt(els[i].textContent);
+                  value++;
+                  let txt = document.createTextNode(value.toString());
+                  els[i].innerText = txt.textContent;
+                }
+              }
+            }
+          }, 1000);
+
         }
       }
     },

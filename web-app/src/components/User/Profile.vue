@@ -43,9 +43,8 @@ export default{
         }
     },
     created: function(){
-      let self = this;
-      self.$http.get('http://localhost:8000/simpleuserinfos/', {headers: {'Authorization': "Token " + self.$cookie.get('token')}}).then((response) => {
-        self.qwirkUser.copyConstructor(response.body);
+      this.$http.get(this.$root.server + '/simpleuserinfos/', {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+        this.qwirkUser.copyConstructor(response.body);
         //console.log(self.qwirkUser);
       }, (err) => {
         console.log("error :", err);
@@ -54,7 +53,7 @@ export default{
     mounted: function(){},
     methods: {
       saveChanges: function(){
-        this.$http.post('http://localhost:8000/useredit/', this.qwirkUser, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+        this.$http.post(this.$root.server + '/useredit/', this.qwirkUser, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
           console.log("sucess edit", response);
           // TODO display message that said your modifications was good taken
         }, (err) => {

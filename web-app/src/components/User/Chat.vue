@@ -42,16 +42,56 @@
     <div v-if="!fullScreen" id="containerChat" class="fullHeightScrolling" v-bind:class="{'containerChatCallMinimise': inCall && !fullScreen}">
       <div class="containerScroll" id="containerMessages">
         <div v-for="message in messages" class="containerMessage">
-          <div class="pictureUser">
-            <img src="/static/media/defaultUser.png">
+          <div v-if="message.type == 'message'">
+            <div class="pictureUser">
+              <img src="/static/media/defaultUser.png">
+            </div>
+            <div class="messageContent">
+              <div class="messageUserName">
+                <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
+              </div>
+              <div class="messageText">
+                <p>{{message.text}}</p>
+              </div>
+            </div>
           </div>
-          <div class="messageContent">
-            <div class="messageUserName">
-              <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
+
+          <div v-else-if="message.type == 'requestMessage'">
+
+            <div class="pictureUser">
+              <img src="/static/media/defaultUser.png">
             </div>
-            <div class="messageText">
-              <p>{{message.text}}</p>
+            <div class="messageContent">
+              <div class="messageUserName">
+                <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
+              </div>
+              <div class="messageText">
+                <p>{{message.text}}</p>
+              </div>
             </div>
+
+            <div v-if="groupInformations.statusContact == 'Asking'">
+              <h3>Your demand is actually in waiting state. Please wait for a respond.</h3>
+            </div>
+
+            <div v-else-if="groupInformations.statusContact == 'Pending'">
+              <h3>{{ groupInformations.qwirkUsers[0].user.username }} is asking you as friend</h3>
+              <div class="containBtnInline">
+                <button class="btn btnAction" v-on:click="acceptRequest()">Accept</button>
+                <button class="btn btnAction" v-on:click="declineRequest()">Decline</button>
+                <button class="btn btnAction" v-on:click="blockUser(groupInformations.qwirkUsers[0].user.username)">Block</button>
+              </div>
+            </div>
+
+            <div v-else-if="groupInformations.statusContact == 'Friend'">
+              <h3> You and {{ groupInformations.qwirkUsers[0].user.username }} are now friends</h3>
+            </div>
+
+
+            <div v-else-if="groupInformations.statusContact == 'Refuse'">
+              <h3>{{ groupInformations.qwirkUsers[0].user.username }} refuse your demand.</h3>
+            </div>
+
           </div>
         </div>
       </div>
@@ -105,30 +145,20 @@ export default{
     },
     created: function(){},
     mounted: function(){
-      let self = this;
 
       //console.log(this.$route.params);
-      self.currentGroupName = this.$route.params.name;
-      if(self.currentGroupName != "" && self.currentGroupName != undefined){
-        var wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-        self.socket = new WebSocket(wsProtocol + "localhost:8000/ws/chat/" + self.$cookie.get('token') + "/" + self.currentGroupName);
+      this.currentGroupName = this.$route.params.name;
+      if(this.currentGroupName !== "" && typeof this.currentGroupName !== 'undefined'){
+        this.socket = new WebSocket(this.$root.wssServer + "/ws/chat/" + this.$cookie.get('token') + "/" + this.currentGroupName);
 
-        self.socket.onmessage = function (message) {
-          self.socketMessage(message);
-        }
-
-        self.socket.onopen = function () {
-          self.socketOpen();
-        };
-
-        self.socket.onerror = function (err) {
-          self.socketError(err);
-        };
+        this.socket.onmessage = this.socketMessage;
+        this.socket.onopen = this.socketOpen;
+        this.socket.onerror = this.socketError;
       }
     },
     methods: {
       scrollUpdated: function(){
-        var objDiv = document.getElementById("containerMessages");
+        let objDiv = document.getElementById("containerMessages");
         objDiv.scrollTop = objDiv.scrollHeight;
       },
       sendText: function(){
@@ -152,22 +182,21 @@ export default{
         window.location.href = "/user";
       },
       socketMessage: function(message){
-        let self = this;
         let data = JSON.parse(message.data);
         //console.log(data);
         if(data.action === "new-message"){
           this.messages.push(JSON.parse(data.content));
           //console.log(this.messages);
-          setTimeout(function(){
-            self.scrollUpdated()
+          setTimeout(() => {
+            this.scrollUpdated()
           }, 200);
         }else if(data.action === "saved-messages"){
           //console.log(data.content)
           this.messages = this.messages.concat(JSON.parse(data.content).reverse());
           //console.log(this.messages);
 
-          setTimeout(function(){
-            self.scrollUpdated()
+          setTimeout(() => {
+            this.scrollUpdated()
           }, 300);
         }else if(data.action === "group-informations"){
           //console.log(data.content)
@@ -181,13 +210,24 @@ export default{
           }
         }
       },
+      askAgain: function(){
+        this.socket.send(JSON.stringify({action:'ask-again-contact-request'}));
+      },
+      acceptRequest: function(){
+        this.socket.send(JSON.stringify({action:'accept-contact-request'}));
+      },
+      declineRequest: function(){
+        this.socket.send(JSON.stringify({action:'decline-contact-request'}));
+      },
+      blockuser: function(username){
+        this.socket.send(JSON.stringify({action:'block-contact', content:{username: username}}));
+      },
       callWebRTC: function(){
         console.log("we call !");
-        let self = this;
         this.connection = new RTCMultiConnection();
 
         // this line is VERY_important
-        this.connection.socketURL = 'http://localhost:9001/';
+        this.connection.socketURL = this.$root.serverRtc;
 
         // all below lines are optional; however recommended.
 
@@ -196,19 +236,19 @@ export default{
             video: true
         };
 
-        this.connection.onstream = function(event) {
+        this.connection.onstream = (event) => {
           if (document.getElementById(event.streamid)) {
             console.log("duplicate video");
             return;
           }
-            event.mediaElement.id = event.streamid;
-            let containerVideoChat = document.getElementById("videoList");
-            containerVideoChat.appendChild(event.mediaElement);
-            self.initHark({
-              stream: event.stream,
-              streamedObject: event,
-              connection: self.connection
-            });
+          event.mediaElement.id = event.streamid;
+          let containerVideoChat = document.getElementById("videoList");
+          containerVideoChat.appendChild(event.mediaElement);
+          this.initHark({
+            stream: event.stream,
+            streamedObject: event,
+            connection: this.connection
+          });
         };
 
         this.connection.keepStreamsOpened = false;
@@ -357,41 +397,33 @@ export default{
     },
     watch: {
       '$route' (to, from) {
-        let self = this;
-        self.currentGroupName = this.$route.params.name;
-        self.messages = [];
+        this.currentGroupName = this.$route.params.name;
+        this.messages = [];
 
         if(this.socket != undefined){
           this.socket.close();
           this.socketIsOpen = false;
         }
 
-        if(self.currentGroupName != ""){
+        if(this.currentGroupName != ""){
 
-          var wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-          self.socket = new WebSocket(wsProtocol + "localhost:8000/ws/chat/" + self.$cookie.get('token') + "/" + self.currentGroupName);
+          this.socket = new WebSocket(this.$root.wssServer + "/ws/chat/" + this.$cookie.get('token') + "/" + this.currentGroupName);
 
 
-          self.socket.onmessage = function (message) {
-            self.socketMessage(message);
-          }
+          this.socket.onmessage = this.socketMessage;
 
-          self.socket.onopen = function () {
-            self.socketOpen();
-          };
+          this.socket.onopen = this.socketOpen;
 
-          self.socket.onerror = function (err) {
-            self.socketError(err);
-          };
+          this.socket.onerror = this.socketError;
         }
       }
     },
     filters:{
       hours: function(value){
         //console.log(value);
-        var parts = value.split('T');
-        var date = parts[0];
-        var time = parts[1];
+        let parts = value.split('T');
+        let date = parts[0];
+        let time = parts[1];
 
         //console.log(date);
         //console.log(time);

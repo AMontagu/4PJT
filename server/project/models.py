@@ -40,6 +40,7 @@ class Message(models.Model):
 	qwirkGroup = models.ForeignKey(QwirkGroup, on_delete=models.CASCADE)
 	text = models.TextField()
 	dateTime = models.DateTimeField(auto_now=True)
+	type = models.TextField()
 
 
 class Notification(models.Model):
