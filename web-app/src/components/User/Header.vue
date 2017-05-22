@@ -9,8 +9,11 @@
           <div v-if="groupInformations.isContactGroup">
             <span :class="getConnectionColor(groupInformations.qwirkUsers[0].status)"></span> <p class="statusText">{{groupInformations.qwirkUsers[0].status}}</p>
           </div>
-          <div v-else>
-            <p><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{usersNumber}}</p>
+          <div class="btn-group" v-else>
+            <button type="button" class="unstyleBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{usersNumber}}</button>
+            <ul class="dropdown-menu">
+              <li v-for="qwirkUser in groupInformations.qwirkUsers"><a v-on:click="goToUserProfile(qwirkUser)">{{ qwirkUser.user.username }}</a></li>
+            </ul>
           </div>
         </div>
       </div>
@@ -24,7 +27,7 @@
             <li v-if="groupInformations.isAdmin" role="separator" class="divider"></li>
             <li v-if="groupInformations.isAdmin"><a v-on:click="removeGroup()">Remove {{groupInformations.titleGroupName}}</a></li>
           </ul>
-          <ul v-else class="dropdown-menu" style="left: -125px;">
+          <ul class="dropdown-menu" style="left: -125px;" v-else>
             <li><a v-on:click="removeGroup()">Remove relationship</a></li>
           </ul>
         </div>
@@ -131,6 +134,12 @@ export default{
           this.$router.go('/user/');
         });
       },
+      quitGroup: function(){
+        this.$http.post(this.$root.server + '/quitGroup/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+          console.log("successfully quitted ", this.currentGroupName);
+          this.$router.go('/user/');
+        });
+      },
       emitCallWebRTC: function(){
         this.$emit("callWebRTC");
       }
@@ -159,7 +168,6 @@ export default{
     padding-left: 20px;
     float: left;
     height: 60px;
-    overflow: hidden;
   }
 
   .rightHeader{

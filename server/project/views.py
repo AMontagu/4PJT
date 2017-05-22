@@ -274,6 +274,27 @@ def removeGroup(request):
 		return HttpResponse(status=401)
 
 @api_view(['POST'])
+def quitGroup(request):
+	if request.user is not None:
+		groupName = request.data['groupName']
+
+		qwirkGroup = QwirkGroup.objects.filter(name=groupName)
+		request.user.qwirkuser.qwirkGroups.remove(qwirkGroup)
+
+		if request.user.qwirkuser in qwirkGroup.admins:
+			qwirkGroup.admins.remove(request.user.qwirkuser)
+			if len(qwirkGroup.admins.all()) <= 0:
+				qwirkUserDefaultAdmin = QwirkUser.objects.filter(qwirkGroup=qwirkGroup).latest()
+				qwirkGroup.admins.add(qwirkUserDefaultAdmin)
+				# TODO Notification and message
+
+		# TODO Notification of leaving
+
+		return HttpResponse(status=204)
+	else:
+		return HttpResponse(status=401)
+
+@api_view(['POST'])
 @renderer_classes((JSONRenderer,))
 def addUserToGroup(request):
 	if request.user is not None:

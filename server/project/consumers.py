@@ -203,11 +203,15 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 							if contact.qwirkUser.user.username != user.username:
 								groupInfo["titleGroupName"] = contact.qwirkUser.user.username
 								groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(contact.qwirkUser).data)
+								for qwirkUser in groupInfo["qwirkUsers"]:
+									qwirkUser["isAdmin"] = True
 								groupInfo["statusContact"] = contact.status
 					else:
 						qwirkUsers = qwirkGroup.qwirkuser_set.all()
 						for qwirkUser in qwirkUsers:
 							groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(qwirkUser).data)
+							for qwirkUser in groupInfo["qwirkUsers"]:
+								qwirkUser["isAdmin"] = qwirkUser in qwirkGroup.admins.all()
 						groupInfo["titleGroupName"] = qwirkGroup.name
 					text = {
 						"action": "group-informations",
