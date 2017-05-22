@@ -6,7 +6,8 @@ class QwirkGroup(models.Model):
 	name = models.CharField(max_length=20, unique=True)
 	isPrivate = models.BooleanField()
 	isContactGroup = models.BooleanField()
-	admin = models.ManyToManyField('QwirkUser')
+	admins = models.ManyToManyField('QwirkUser', related_name='admins')
+	blockedUsers = models.ManyToManyField('QwirkUser', related_name='blockedUsers', blank=True)
 
 	def __str__(self):
 		return str(self.name)
@@ -40,6 +41,7 @@ class Message(models.Model):
 	qwirkGroup = models.ForeignKey(QwirkGroup, on_delete=models.CASCADE)
 	text = models.TextField()
 	dateTime = models.DateTimeField(auto_now=True)
+	type = models.TextField()
 
 
 class Notification(models.Model):

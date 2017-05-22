@@ -19,7 +19,28 @@ new Vue({
   http: {
     root: '/',
   },
-  qwirkUser: new QwirkUser(),
   template: '<App/>',
+  data(){
+    return{
+      qwirkUser: new QwirkUser(),
+      serverIp: "localhost",
+      serverPort: 8000,
+      serverRtcIp: "localhost",
+      serverRtcPort: 9000,
+      httpProtocol: location.protocol === 'https:' ? 'https://' : 'http://',
+      wssProtocol: location.protocol === 'https:' ? 'wss://' : 'ws://',
+    }
+  },
+  computed: {
+    wssServer(){
+      return this.wssProtocol + this.serverIp + ':' + this.serverPort;
+    },
+    server(){
+      return this.httpProtocol + this.serverIp + ':' + this.serverPort;
+    },
+    serverRtc(){
+      return this.httpProtocol + this.serverRtcIp + ':' + this.serverRtcPort;
+    }
+  },
   components: { App }
 })

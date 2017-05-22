@@ -113,11 +113,10 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 			goodTokenAndUserInGroup, user = checkToken(kwargs, False)
 
 			if goodTokenAndUserInGroup:
+				qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"])  # TODO check with exist or with try catch but not sur because check in connect need to be tested
 
 				if content["action"] == "message":
-					qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"])# TODO check with exist or with try catch but not sur because check in connect need to be tested
-
-					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"])
+					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"], type="message")
 					message.save()
 
 					messageSerialized = MessageSerializer(message)
@@ -166,6 +165,14 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 						"text": json.dumps(content),
 					})
 				elif content["action"] == "get-message":
+
+					try:
+						# TODO MAYBE THINK ABOUT USING message_qwirkGroup for cleaning all the notification
+						Notification.objects.filter(message__qwirkGroup__name=kwargs["groupname"],
+																	qwirkUser=user.qwirkuser).delete()
+					except Notification.DoesNotExist:
+						pass
+
 					messages = Message.objects.filter(qwirkGroup__name=kwargs["groupname"]).order_by("-dateTime")[int(content["content"]["startMessage"]):int(content["content"]["endMessage"])]
 					messageToSend = list()
 					for message in messages:
@@ -177,18 +184,13 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 					}
 					self.send(text)
 				elif content["action"] == "get-group-informations":
-					groupName = kwargs["groupname"]
-
-					print(groupName)
-
-					qwirkGroup = QwirkGroup.objects.get(name=groupName)
 
 					groupInfo = dict()
 
 					groupInfo["isPrivate"] = qwirkGroup.isPrivate
 					groupInfo["isContactGroup"] = qwirkGroup.isContactGroup
 
-					if user.qwirkuser in qwirkGroup.admin.all():
+					if user.qwirkuser in qwirkGroup.admins.all():
 						groupInfo["isAdmin"] = True
 					else:
 						groupInfo["isAdmin"] = False
@@ -201,6 +203,7 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 							if contact.qwirkUser.user.username != user.username:
 								groupInfo["titleGroupName"] = contact.qwirkUser.user.username
 								groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(contact.qwirkUser).data)
+								groupInfo["statusContact"] = contact.status
 					else:
 						qwirkUsers = qwirkGroup.qwirkuser_set.all()
 						for qwirkUser in qwirkUsers:
@@ -211,6 +214,39 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 						"content": json.dumps(groupInfo)
 					}
 					self.send(text)
+				elif content["action"] == "accept-contact-request":
+					if qwirkGroup.isContactGroup:
+						contacts = qwirkGroup.contact_set.all()
+						for contact in contacts:
+							contact.status = "Friend"
+							contact.save()
+
+						requestMessage = qwirkGroup.message_set.get(type='requestMessage')
+						requestMessage.type = "acceptMessage"
+						requestMessage.save()
+				elif content["action"] == "decline-contact-request":
+					if qwirkGroup.isContactGroup:
+						contacts = qwirkGroup.contact_set.all()
+						for contact in contacts:
+							contact.status = "Refuse"
+							contact.save()
+
+						requestMessage = qwirkGroup.message_set.get(type='requestMessage')
+						requestMessage.type = "refuseMessage"
+						requestMessage.save()
+				elif content["action"] == "remove-contact":
+					qwirkGroup.delete()
+				elif content["action"] == "block-contact":
+					if qwirkGroup.isContactGroup:
+						contacts = qwirkGroup.contact_set.all()
+						for contact in contacts:
+							contact.status = "Block"
+							contact.save()
+					else:
+						username = content["content"]["username"]
+						userToBlock = QwirkUser.objects.get(user__username=username)
+						qwirkGroup.blockedUsers.add(userToBlock)
+
 		else:
 			print("no groupname in url")
 

@@ -62,7 +62,7 @@ export default{
 
     console.log("is this an answer ? ", this.answer);
 
-    self.peer = new Peer({host: 'localhost', port: 9000, path: 'peerjs', key: 'peerjs', debug: 10});
+    self.peer = new Peer({host: this.$root.serverRtcIp, port: this.$root.serverRtcPort, path: 'peerjs', key: 'peerjs', debug: 10});
 
     this.hease.setCallbackPeerCall(function (call) {
       console.log("in callback call");
