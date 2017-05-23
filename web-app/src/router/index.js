@@ -24,12 +24,12 @@ export default new Router({
     { path: '/testRoomCall', component: TestRoomCall},
     { path: '/user', component: UserHome,
       beforeEnter: (to, from, next) => {
-        let self = this;
+
         if (Vue.cookie.get('token') == null) {
           next('/');
         } else {
 
-          Vue.http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + Vue.cookie.get('token')}}).then(function (response) {
+          Vue.http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + Vue.cookie.get('token')}}).then( (response) => {
 
             if (response.body == "True") {
               console.log("user is logged in");
@@ -49,10 +49,14 @@ export default new Router({
       children: [
         {
           path: '',
-          component: UserChat
+          component: UserProfile
         },
         {
           path: 'profile',
+          component: UserProfile
+        },
+        {
+          path: 'profile/:username',
           component: UserProfile
         },
         {

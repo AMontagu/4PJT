@@ -5,10 +5,10 @@
         <!-- Split button -->
         <div class="btn-group">
           <button type="button" id="userNameBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                  class="unstyleBtn">{{ qwirkUser.user.username }} <span
+                  class="unstyleBtn">{{ $root.qwirkUser.user.username }} <span
             class="glyphicon glyphicon-chevron-down marginL20p" aria-hidden="true"></span></button>
           <ul class="dropdown-menu">
-            <router-link to="/user/profile" tag="li"><a>Profile & Account</a></router-link>
+            <li><a href="/user/profile">Profile & account</a></li>
             <li><a v-on:click="changeConnectionStatus()">Change connection status</a></li>
             <li role="separator" class="divider"></li>
             <li><a v-on:click="logOut()">Log Out</a></li>
@@ -31,7 +31,7 @@
       <div class="chatKind">
         <h3>Contacts</h3>
         <div class="leftNavbar">
-          <div v-for="contact in qwirkUser.contacts">
+          <div v-for="contact in $root.qwirkUser.contacts">
             <div v-if="contact.status != 'Refuse' && contact.status != 'Block'">
               <router-link :to="contact.qwirkGroup.name | groupPath">{{ contact.qwirkUser.user.username }}</router-link>
               <span :id="contact.qwirkGroup.name" class="notification"></span>
@@ -45,7 +45,7 @@
           <span class="glyphicon glyphicon-plus" aria-hidden="true" v-on:click="showAddGroup()"></span>
         </div>
         <div class="leftNavbar">
-          <div v-for="group in qwirkUser.qwirkGroups" v-if="group.isPrivate">
+          <div v-for="group in $root.qwirkUser.qwirkGroups" v-if="group.isPrivate">
             <router-link :to="group.name | groupPath">{{ group.name }}</router-link>
             <span :id="group.name" class="notification"></span>
           </div>
@@ -57,7 +57,7 @@
           <span class="glyphicon glyphicon-plus" aria-hidden="true" v-on:click="showAddChannel()"></span>
         </div>
         <div class="leftNavbar">
-          <div v-for="group in qwirkUser.qwirkGroups" v-if="!group.isPrivate">
+          <div v-for="group in $root.qwirkUser.qwirkGroups" v-if="!group.isPrivate">
             <router-link :to="group.name | groupPath">{{ group.name }}</router-link>
             <span :id="group.name" class="notification"></span>
           </div>
@@ -104,7 +104,6 @@ export default{
   name:"UserHome",
   data(){
     return{
-      qwirkUser: new QwirkUser(),
       showModal: false,
       modalHeader: "",
       createPrivateGroup: true,
@@ -114,22 +113,16 @@ export default{
       userSocket: null
     }
   },
-  computed: {
-    currentUser: function () {
-      //console.log(this.$root.$options);
-      return this.$root.$options.qwirkUser;
-    }
-  },
   created: function(){
 
     if(this.loading){
       setTimeout(() => {
-        this.qwirkUser.notifications.forEach((notification) => {
+        this.$root.qwirkUser.notifications.forEach((notification) => {
           this.processNotification(notification);
         })
       }, 500)
     }else{
-      this.qwirkUser.notifications.forEach((notification) => {
+      this.$root.qwirkUser.notifications.forEach((notification) => {
           this.processNotification(notification);
         })
     }
@@ -140,16 +133,17 @@ export default{
 
     this.$http.get(this.$root.server + '/userinfos/').then((response) => {
       //console.log(response.body)
-      this.qwirkUser.copyConstructor(response.body);
+      let qwirkUser = new QwirkUser();
+      qwirkUser.copyConstructor(response.body);
       //console.log(this.qwirkUser);
       //console.log(this.qwirkUser.contacts);
       //console.log(this.qwirkUser.qwirkGroups);
-      this.$root.$options.qwirkUser = this.qwirkUser;
-      //console.log(this.$root.$options.qwirkUser)
+      this.$root.qwirkUser = qwirkUser;
+      //console.log(this.$root.qwirkUser)
 
       this.loading = false;
 
-      this.userSocket = new WebSocket(this.$root.wssServer + '/ws/user/' + this.$cookie.get('token') + '/' + this.qwirkUser.user.username);
+      this.userSocket = new WebSocket(this.$root.wssServer + '/ws/user/' + this.$cookie.get('token') + '/' + this.$root.qwirkUser.user.username);
 
       this.userSocket.onmessage = (message) => {
         //console.log("receive message user: ", message);
@@ -173,8 +167,8 @@ export default{
           let contact = new Contact();
           contact.copyConstructor(data.contact);
 
-          if (!this.qwirkUser.existContact(contact)) {
-            this.qwirkUser.contacts.push(contact);
+          if (!this.$root.qwirkUser.existContact(contact)) {
+            this.$root.qwirkUser.contacts.push(contact);
           }
 
 
@@ -184,7 +178,7 @@ export default{
 
           this.processNotification(notification);
         }
-      }
+      };
 
       this.userSocket.onopen = () => {
         console.log("user socket open");
@@ -213,9 +207,9 @@ export default{
         document.getElementById('searchBarText').value = "";
         //console.log("currentGroupName: ", this.currentGroupName)
 
-        if (!this.qwirkUser.existContact(contact)) {
+        if (!this.$root.qwirkUser.existContact(contact)) {
 
-          this.qwirkUser.contacts.push(contact);
+          this.$root.qwirkUser.contacts.push(contact);
         }
 
 

@@ -31,6 +31,10 @@ urlpatterns = [
     url(r'^creategroup/', views.createGroup),
     url(r'^addusertogroup/', views.addUserToGroup),
     url(r'^removegroup/', views.removeGroup),
+    url(r'^quitgroup/', views.quitGroup),
+    url(r'^checkfriendship/', views.checkFriendship),
+    url(r'^giveadminright/', views.giveAdminRight),
+    url(r'^banuser/', views.banUser),
     url(r'^api-token-auth/', tokenView.obtain_auth_token),
     url(r'^user-autocomplete/$', views.userAutocomplete)
 ]

@@ -9,8 +9,11 @@
           <div v-if="groupInformations.isContactGroup">
             <span :class="getConnectionColor(groupInformations.qwirkUsers[0].status)"></span> <p class="statusText">{{groupInformations.qwirkUsers[0].status}}</p>
           </div>
-          <div v-else>
-            <p><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{usersNumber}}</p>
+          <div class="btn-group" v-else>
+            <button type="button" class="unstyleBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{usersNumber}}</button>
+            <ul class="dropdown-menu">
+              <li v-for="qwirkUser in groupInformations.qwirkUsers"><a v-on:click="showUser(qwirkUser)">{{ qwirkUser.user.username }}</a></li>
+            </ul>
           </div>
         </div>
       </div>
@@ -24,7 +27,7 @@
             <li v-if="groupInformations.isAdmin" role="separator" class="divider"></li>
             <li v-if="groupInformations.isAdmin"><a v-on:click="removeGroup()">Remove {{groupInformations.titleGroupName}}</a></li>
           </ul>
-          <ul v-else class="dropdown-menu" style="left: -125px;">
+          <ul class="dropdown-menu" style="left: -125px;" v-else>
             <li><a v-on:click="removeGroup()">Remove relationship</a></li>
           </ul>
         </div>
@@ -54,11 +57,53 @@
         </button>
       </div>
     </modal>
+
+
+    <modal v-if="showUserModal" @close="showUserModal = false">
+      <h3 slot="header" class="headerUserModal">{{ userToShow.user.username }}</h3>
+
+      <div slot="body">
+        <ul v-if="userToShow.user.username != $root.qwirkUser.user.username" class="listActions">
+          <li v-on:click="goToUserProfile(userToShow.user.username)">View user profile</li>
+          <li v-on:click="goToUserMessage(userToShow.user.username)">Direct Messages</li>
+          <li v-if="groupInformations.isAdmin" v-on:click="giveAdminRight(userToShow.user.username)">Give moderator right</li>
+          <li v-if="groupInformations.isAdmin" v-on:click="banUser(userToShow.user.username)">Ban User</li>
+        </ul>
+        <ul class="listActions" v-else>
+          <li v-on:click="goToUserProfile(userToShow.user.username)">Edit profile</li>
+          <li v-on:click="changeConnectionStatus()">Set yourself to away</li>
+        </ul>
+      </div>
+
+      <div slot="footer">
+        <button class="modal-default-button" @click="showUserModal = false">
+          Close
+        </button>
+      </div>
+    </modal>
+
+    <modal v-if="showModalUserNotFriend" @close="showModalUserNotFriend = false">
+      <h3 slot="header">You are not friend with {{ usernameUserNotFriend }}</h3>
+
+      <div slot="body">
+        <p>Would you send a contact request to {{ usernameUserNotFriend }} ?</p>
+      </div>
+
+      <div slot="footer">
+        <button class="modal-default-button" @click="showModalUserNotFriend = false">
+          No
+        </button>
+        <button class="modal-default-button" @click="addContact()">
+          Yes
+        </button>
+      </div>
+    </modal>
   </div>
 </template>
 
 <script>
 import Modal from '../shared/Modal.vue'
+import {QwirkUser, Contact} from '../../../static/js/model'
 
 export default{
     name:"UserHeader",
@@ -71,6 +116,10 @@ export default{
           usernameUser: "",
           adminUser: false,
           errorUserName: "",
+          showUserModal: false,
+          userToShow: new QwirkUser(),
+          usernameUserNotFriend: '',
+          showModalUserNotFriend: false,
         }
     },
     created: function(){
@@ -110,9 +159,14 @@ export default{
       },
       addUser: function(){
         if(this.usernameUser != ""){
-          this.$http.post(this.$root.server + 'addusertogroup/', {groupName: this.currentGroupName, username: this.usernameUser, isAdmin: this.adminUser}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+          this.$http.post(this.$root.server + '/addusertogroup/', {groupName: this.currentGroupName, username: this.usernameUser, isAdmin: this.adminUser}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
             console.log("sucess request add user to group/channels", response);
-            let data = JSON.parse(response.body);
+            let data = response.body;
+
+            if(typeof data === 'string'){
+            	data = JSON.parse(data);
+            }
+
             console.log(data);
             if(data["status"] == "success"){
               this.showModal = false;
@@ -131,8 +185,89 @@ export default{
           this.$router.go('/user/');
         });
       },
+      quitGroup: function(){
+        this.$http.post(this.$root.server + '/quitGroup/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+          console.log("successfully quitted ", this.currentGroupName);
+          this.$router.go('/user/');
+        });
+      },
       emitCallWebRTC: function(){
         this.$emit("callWebRTC");
+      },
+      showUser(qwirkUser){
+      	this.userToShow = qwirkUser;
+      	console.log(this.userToShow);
+      	this.showUserModal = true;
+      },
+      goToUserProfile(username){
+      	//this.$router.push('/user/profile/' + username);
+        window.location.href = '/user/profile/' + username;
+      },
+      giveAdminRight(username){
+        this.$http.post(this.$root.server + '/giveadminright/', {username: username, groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+          console.log("successfully give admin right ");
+          this.showUserModal = false;
+        });
+
+      },
+      checkFriendship(username){
+      	return new Promise((resolve) => {
+          this.$http.post(this.$root.server + '/checkfriendship/', {username: username}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+            console.log("friendship status: ", response.body);
+            let data = response.body;
+
+            if(typeof data === 'string'){
+            	data = JSON.parse(data);
+            }
+
+            resolve(data);
+          });
+        });
+      },
+      addContact(){
+
+        this.$http.post(this.$root.server + '/addcontact/', {'username': this.usernameUserNotFriend}).then((response) => {
+
+          console.log("sucess add contact", response.data);
+
+          let contact = new Contact();
+
+          contact.copyConstructor(response.data);
+
+          if (!this.$root.qwirkUser.existContact(contact)) {
+
+            this.$root.qwirkUser.contacts.push(contact);
+          }
+
+          this.showModalUserNotFriend = false;
+
+          this.$router.push('/user/' + contact.qwirkGroup.name)
+
+        }, function(err){
+
+          console.log("error :", err);
+        });
+      },
+      goToUserMessage(username){
+      	this.checkFriendship(username).then((response) => {
+      		if(response.isFriend || response.isFriend === 'True'){
+            this.showUserModal = false;
+      			this.$router.push('/user/' + response.groupName);
+          }else {
+      			this.showUserModal = false;
+      			this.usernameUserNotFriend = username;
+            this.showModalUserNotFriend = true;
+          }
+        })
+      },
+      banUser(username){
+        this.$http.post(this.$root.server + '/banuser/', {username: username, groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+          console.log("user banned");
+          this.showUserModal = false;
+        });
+      },
+      changeConnectionStatus(){
+      	//TODO
       }
     },
     computed: {
@@ -159,7 +294,6 @@ export default{
     padding-left: 20px;
     float: left;
     height: 60px;
-    overflow: hidden;
   }
 
   .rightHeader{
@@ -186,5 +320,33 @@ export default{
 
   .qwirkHeaderIcon{
     font-size: 30px;
+  }
+
+  .headerUserModal{
+    background-image: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0) 34%, rgba(0,0,0,0.2) 66%, rgba(0,0,0,0.2) 83%, rgba(0,0,0,0.6)), url(/static/media/defaultUser.png), url(/static/media/defaultUser.png);
+    background-size: cover;
+    height: 150px;
+    margin: -35px -45px;
+    border-radius: 1%;
+    line-height: 240px;
+    color: white;
+  }
+
+  .listActions{
+    padding-left: 0;
+    cursor: pointer;
+  }
+
+  .listActions li {
+    display: block;
+    color: #000;
+    padding: 8px 16px;
+    text-decoration: none;
+    text-align: left;
+  }
+
+  .listActions li:hover {
+    background-color: #555;
+    color: white;
   }
 </style>

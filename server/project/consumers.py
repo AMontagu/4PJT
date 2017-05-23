@@ -62,9 +62,16 @@ def checkGroup(url, token):
 			contactRelationExist = Contact.objects.filter(qwirkGroup__name=groupName,
 			                                              qwirkUser=token.user.qwirkuser).exists()  # Check if the current user logged in with token is a contact of the group he try to connect
 			print("contactRelationExist: " + str(contactRelationExist))
+
 			userIsInGroup = QwirkUser.objects.filter(qwirkGroups__name=groupName).exists()
 			print("userIsInGroup: " + str(userIsInGroup))
-			if contactRelationExist or userIsInGroup:
+
+			userIsBanned = False
+
+			if token.user.qwirkuser in QwirkGroup.objects.get(name=groupName).blockedUsers.all():
+				userIsBanned = True
+
+			if contactRelationExist or (userIsInGroup and not userIsBanned):
 				return True, token.user
 
 	return False, None
@@ -203,11 +210,15 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 							if contact.qwirkUser.user.username != user.username:
 								groupInfo["titleGroupName"] = contact.qwirkUser.user.username
 								groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(contact.qwirkUser).data)
+								for qwirkUser in groupInfo["qwirkUsers"]:
+									qwirkUser["isAdmin"] = True
 								groupInfo["statusContact"] = contact.status
 					else:
 						qwirkUsers = qwirkGroup.qwirkuser_set.all()
 						for qwirkUser in qwirkUsers:
 							groupInfo["qwirkUsers"].append(QwirkUserSerializerSimple(qwirkUser).data)
+							for qwirkUser in groupInfo["qwirkUsers"]:
+								qwirkUser["isAdmin"] = qwirkUser in qwirkGroup.admins.all()
 						groupInfo["titleGroupName"] = qwirkGroup.name
 					text = {
 						"action": "group-informations",

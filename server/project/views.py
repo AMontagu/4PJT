@@ -234,12 +234,15 @@ def getUserInformations(request):
 @renderer_classes((JSONRenderer,))
 def getSimpleUserInformations(request):
 	if request.user is not None:
-		"""for field in request.user._meta.fields:
-			print(field.name)"""
-		# qwirkUser = QwirkUser.objects.get(user=request.user)
-		serializer = QwirkUserSerializerSimple(request.user.qwirkuser)
+
+		username = request.GET.get('username', None)
+
+		if username is None:
+			serializer = QwirkUserSerializerSimple(request.user.qwirkuser)
+		else:
+			qwirkUser = QwirkUser.objects.get(user__username=username)
+			serializer = QwirkUserSerializerSimple(qwirkUser)
 		jsonResponse = JSONRenderer().render(serializer.data)
-		# print(jsonResponse)
 		return HttpResponse(jsonResponse, status=200)
 	else:
 		return HttpResponse(status=401)
@@ -274,6 +277,27 @@ def removeGroup(request):
 		return HttpResponse(status=401)
 
 @api_view(['POST'])
+def quitGroup(request):
+	if request.user is not None:
+		groupName = request.data['groupName']
+
+		qwirkGroup = QwirkGroup.objects.filter(name=groupName)
+		request.user.qwirkuser.qwirkGroups.remove(qwirkGroup)
+
+		if request.user.qwirkuser in qwirkGroup.admins:
+			qwirkGroup.admins.remove(request.user.qwirkuser)
+			if len(qwirkGroup.admins.all()) <= 0:
+				qwirkUserDefaultAdmin = QwirkUser.objects.filter(qwirkGroup=qwirkGroup).latest()
+				qwirkGroup.admins.add(qwirkUserDefaultAdmin)
+				# TODO Notification and message
+
+		# TODO Notification of leaving
+
+		return HttpResponse(status=204)
+	else:
+		return HttpResponse(status=401)
+
+@api_view(['POST'])
 @renderer_classes((JSONRenderer,))
 def addUserToGroup(request):
 	if request.user is not None:
@@ -286,9 +310,10 @@ def addUserToGroup(request):
 		userToAdd = User.objects.get(username=userName)
 
 		if qwirkGroup in request.user.qwirkuser.qwirkGroups.all():
-			if userToAdd not in qwirkGroup.blockedUsers:
+			if userToAdd.qwirkuser not in qwirkGroup.blockedUsers.all():
 				userToAdd.qwirkuser.qwirkGroups.add(qwirkGroup)
-				# TODO add to admin
+				if isAdmin:
+					qwirkGroup.admins.add(userToAdd)
 				jsonResponse = JSONRenderer().render({'status': 'success'})
 				return HttpResponse(jsonResponse, status=200)
 			else:
@@ -304,10 +329,74 @@ def addUserToGroup(request):
 		return HttpResponse(status=401)
 
 
+@api_view(['POST'])
+def checkFriendship(request):
+	if request.user is not None:
+
+		friendName = request.data['username']
+
+		if request.user.qwirkuser.contacts.filter(qwirkUser__user__username=friendName).exists():
+
+			contact = request.user.qwirkuser.contacts.get(qwirkUser__user__username=friendName)
+
+			if contact.status == "Friend":
+				groupName = contact.qwirkGroup.name
+
+				jsonResponse = JSONRenderer().render({'isFriend': True, 'groupName': groupName})
+				return HttpResponse(jsonResponse, status=200)
+			else:
+				jsonResponse = JSONRenderer().render({'isFriend': False})
+				return HttpResponse(jsonResponse, status=200)
+		else:
+			jsonResponse = JSONRenderer().render({'isFriend': False})
+			return HttpResponse(jsonResponse, status=200)
+	else:
+		return HttpResponse(status=401)
+
+@api_view(['POST'])
+def giveAdminRight(request):
+	if request.user is not None:
+		groupName = request.data['groupName']
+		newAdminUserName = request.data['username']
+
+		qwirkGroup = QwirkGroup.objects.get(name=groupName)
+
+		if request.user.qwirkuser in qwirkGroup.admins.all():
+			newAdmin = QwirkUser.objects.get(user__username=newAdminUserName)
+			qwirkGroup.admins.add(newAdmin)
+
+			return HttpResponse(status=200)
+		else:
+			jsonResponse = JSONRenderer().render({'status': 'error', 'text': 'You need to be admin for add admin right to user'})
+			return HttpResponse(jsonResponse, status=403)
+	else:
+		return HttpResponse(status=401)
+
+
+@api_view(['POST'])
+def banUser(request):
+	if request.user is not None:
+		groupName = request.data['groupName']
+		userToBanUsername = request.data['username']
+
+		qwirkGroup = QwirkGroup.objects.get(name=groupName)
+
+		if request.user.qwirkuser in qwirkGroup.admins.all():
+			userToBan = QwirkUser.objects.get(user__username=userToBanUsername)
+			qwirkGroup.blockedUsers.add(userToBan)
+			userToBan.qwirkGroups.remove(qwirkGroup)
+
+			return HttpResponse(status=200)
+		else:
+			jsonResponse = JSONRenderer().render({'status': 'error', 'text': 'You need to be admin for add admin right to user'})
+			return HttpResponse(jsonResponse, status=403)
+	else:
+		return HttpResponse(status=401)
+
+
 @api_view(['GET'])
 @renderer_classes((JSONRenderer,))
 def userAutocomplete(request):
-	print("ici")
 
 	q = request.query_params.get('q', None)
 
