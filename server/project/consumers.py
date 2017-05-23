@@ -62,9 +62,16 @@ def checkGroup(url, token):
 			contactRelationExist = Contact.objects.filter(qwirkGroup__name=groupName,
 			                                              qwirkUser=token.user.qwirkuser).exists()  # Check if the current user logged in with token is a contact of the group he try to connect
 			print("contactRelationExist: " + str(contactRelationExist))
+
 			userIsInGroup = QwirkUser.objects.filter(qwirkGroups__name=groupName).exists()
 			print("userIsInGroup: " + str(userIsInGroup))
-			if contactRelationExist or userIsInGroup:
+
+			userIsBanned = False
+
+			if token.user.qwirkuser in QwirkGroup.objects.get(name=groupName).blockedUsers.all():
+				userIsBanned = True
+
+			if contactRelationExist or (userIsInGroup and not userIsBanned):
 				return True, token.user
 
 	return False, None

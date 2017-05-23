@@ -171,11 +171,7 @@
     },
     methods: {
       displayMessage: function (type) {
-        if(type.includes("message") || type.includes("Message")){
-          return true;
-        }else{
-          return false;
-        }
+        return (type.includes("message") || type.includes("Message"));
       },
       scrollUpdated: function () {
         let objDiv = document.getElementById("containerMessages");
@@ -224,7 +220,7 @@
           this.headerReady = true;
         } else if (data.action === "call") {
           console.log("receive call from ", data.content.username);
-          if (this.$root.$options.qwirkUser.user.username !== data.content.username && !this.inCall) {
+          if (this.$root.qwirkUser.user.username !== data.content.username && !this.inCall) {
             this.userCallUsername = data.content.username;
             this.showModal = true;
           }
@@ -338,7 +334,7 @@
           this.connection.openOrJoin(this.currentGroupName);
           this.socket.send(JSON.stringify({
             action: 'call',
-            content: {username: this.$root.$options.qwirkUser.user.username}
+            content: {username: this.$root.qwirkUser.user.username}
           }))
         } else {
           this.connection.join(this.currentGroupName);
@@ -400,12 +396,12 @@
           return;
         }
 
-        var connection = args.connection;
-        var streamedObject = args.streamedObject;
-        var stream = args.stream;
+        let connection = args.connection;
+        let streamedObject = args.streamedObject;
+        let stream = args.stream;
 
-        var options = {};
-        var speechEvents = hark(stream, options);
+        let options = {};
+        let speechEvents = hark(stream, options);
 
         speechEvents.on('speaking', function () {
           connection.onspeaking(streamedObject);
@@ -458,11 +454,13 @@
         date = date.split('-');
         time = time.split(':');
 
+        let hour;
+
         if (parseInt(time[0], 10) > 12) {
-          var hour = parseInt(time[0], 10) % 12;
+          hour = parseInt(time[0], 10) % 12;
         }
         else {
-          var hour = parseInt(time[0], 10);
+          hour = parseInt(time[0], 10);
         }
 
         hour = hour < 10 ? '0' + hour : hour;
