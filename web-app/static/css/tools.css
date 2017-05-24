@@ -554,6 +554,20 @@ img.aligned_middle {
   height: 100%;
 }
 
+.btn_unstyle {
+  -webkit-font-smoothing: antialiased;
+  font-family: Slack-Lato,appleLogo,sans-serif;
+  background: 0 0;
+  border: none;
+  padding: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  outline: 0;
+}
 
 /* Add this*/
 

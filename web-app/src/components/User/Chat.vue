@@ -62,7 +62,7 @@
         <div v-for="message in messages" class="containerMessage">
           <div v-if="displayMessage(message.type)">
             <div class="pictureUser">
-              <img src="/static/media/defaultUser.png">
+              <img :src="getAvatarSrc(message.qwirkUser.avatar)">
             </div>
             <div class="messageContent">
               <div class="messageUserName">
@@ -106,8 +106,35 @@
           </div>
         </div>
       </div>
-      <input class="fixBottom inputChat" type="text" v-model="inputText" :disabled="!socketIsOpen"
-             v-on:keyup.enter="sendText"/>
+      <div class="chatBar">
+        <input class="inputChat" type="text" v-model="inputText" :disabled="!socketIsOpen"
+               v-on:keyup.enter="sendText"/>
+
+        <!--<div class="btn-group dropup chatOptions">
+          <button type="button" id="primary_file_button" data-js="primary_file_button" class="btn_unstyle file_upload_btn" aria-label="File menu">
+            <i class="glyphicon glyphicon-plus"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li>Upload file</li>
+            <li>Upload code</li>
+          </ul>
+        </div>-->
+
+        <div class="btn-group dropup chatOptions">
+          <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><i class="glyphicon glyphicon-plus"></i></button>
+          <ul class="dropdown-menu listActions">
+            <li><a>Upload file</a></li>
+            <li><a>Upload code</a></li>
+          </ul>
+        </div>
+
+        <input type="file" id="file_upload" class="hidden" multiple="multiple">
+
+        <button type="button" class="btn_unstyle emo_menu">
+          <i class="glyphicon glyphicon-heart"></i>
+        </button>
+
+      </div>
     </div>
 
     <modal v-if="showModal" @close="showModal = false">
@@ -416,6 +443,13 @@
           streamedObject.threshold = threshold;
           connection.onvolumechange(streamedObject);
         });
+      },
+      getAvatarSrc(avatar){
+        if(typeof avatar === 'undefined' || avatar === null || avatar === ""){
+          return '/static/media/defaultUser.png';
+        }else{
+          return '/static/media/avatar/' + avatar;
+        }
       }
     },
     watch: {
@@ -484,20 +518,99 @@
     border-bottom: 1px solid grey;
   }
 
-  .inputChat {
+
+  .chatBar{
+    position: relative;
     width: 95%;
-    border-radius: 20px;
-    height: 30px;
-    padding-left: 20px;
-    outline: none;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  .fixBottom {
+  .inputChat  {
+    padding: 0 50px 0 50px;
+    height: auto;
+    max-height: none;
+    min-height: 41px;
+
+    overflow: auto;
+    margin: 0;
+    width: 100%;
+    border: 2px solid #E0E0E0;
+    border-radius: .375rem;
+    outline: 0;
+    background: #fff;
+    resize: none;
+    box-shadow: none;
+    color: #3D3C40;
+    font-size: .9375rem;
+    line-height: 1.2rem;
+    -webkit-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+    user-select: auto;
+
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  .emo_menu{
     position: absolute;
-    margin: auto;
+    z-index: 1;
+    right: 5px;
+    top: 0;
+    width: 36px;
+    height: 42px;
+    line-height: 42px;
+    text-align: center;
+    color: rgba(0,0,0,.35);
+    opacity: 1;
+  }
+
+  .chatOptions {
+    position: absolute;
+    bottom: 0;
+    top: 0;
     left: 0;
-    right: 0;
-    bottom: 10px;
+    width: 44px;
+    padding: 0;
+    border: 2px solid #E0E0E0;
+    background: #FFF;
+    color: rgba(0,0,0,.35);
+    line-height: 42px;
+    text-shadow: none;
+    text-align: center;
+    -webkit-transition: background 50ms,color 50ms;
+    -moz-transition: background 50ms,color 50ms;
+    transition: background 50ms,color 50ms;
+    border-radius: 6px 0 0 6px;
+
+
+    -webkit-font-smoothing: antialiased;
+    font-family: Slack-Lato,appleLogo,sans-serif;
+    background: 0 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    font-size: inherit;
+    font-weight: inherit;
+    outline: 0;
+  }
+
+  .listActions{
+    padding-left: 0;
+    cursor: pointer;
+  }
+
+  .listActions li {
+    display: block;
+    color: #000;
+    padding: 8px 16px;
+    text-decoration: none;
+    text-align: left;
+  }
+
+  .listActions li:hover {
+    background-color: #555;
+    color: white;
   }
 
   #containVideoChat {
@@ -525,7 +638,7 @@
   }
 
   .containerScroll {
-    height: calc(100% - 60px);
+    height: calc(100% - 50px);
     overflow-y: scroll;
     overflow-x: hidden;
   }
