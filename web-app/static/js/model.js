@@ -95,6 +95,7 @@ class QwirkUser {
     this.bio = "";
     this.birthDate = "";
     this.notifications = [];
+    this.avatar = "";
   }
 
   copyConstructor(object) {
@@ -109,6 +110,7 @@ class QwirkUser {
     this.birthDate = object.birthDate;
     this.qwirkGroups = object.qwirkGroups;
     this.contacts = object.contacts;
+    this.avatar = object.avatar;
 
     if (typeof object.notifications !== 'undefined' && object.notifications.length > 0) {
       object.notifications.forEach((notification) => {

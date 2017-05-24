@@ -11,7 +11,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.utils.timezone import utc
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, authentication_classes, permission_classes, renderer_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, renderer_classes, \
+	parser_classes
+from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.renderers import JSONRenderer
 
@@ -432,3 +434,20 @@ def userAutocomplete(request):
 	jsonResponse = JSONRenderer().render(userSerialized)
 	print(jsonResponse)
 	return HttpResponse(jsonResponse, status=200)
+
+
+@api_view(['POST'])
+#@parser_classes((FileUploadParser,))
+def changeAvatar(request):
+	if request.user is not None:
+		print(request.FILES['file'])
+
+		avatar = request.FILES['file']
+
+		request.user.qwirkuser.avatar.delete(False)
+		request.user.qwirkuser.avatar.save(request.user.username +'-avatar.jpg', avatar, save=True)
+
+		jsonResponse = JSONRenderer().render({"name": request.user.qwirkuser.avatar.name})
+		return HttpResponse(jsonResponse, status=200)
+	else:
+		return HttpResponse(status=401)

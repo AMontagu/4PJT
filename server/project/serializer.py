@@ -31,7 +31,7 @@ class QwirkUserSerializerSimple(serializers.ModelSerializer):
 
 	class Meta:
 		model = QwirkUser
-		fields = ('user', 'bio', 'birthDate', 'status')
+		fields = ('user', 'bio', 'birthDate', 'status', 'avatar')
 		depth = 1
 
 
@@ -91,4 +91,4 @@ class QwirkUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = QwirkUser
-		fields = ('notifications', 'user', 'bio', 'birthDate', 'qwirkGroups', 'contacts', 'status')
+		fields = ('notifications', 'user', 'bio', 'birthDate', 'qwirkGroups', 'contacts', 'status', 'avatar')

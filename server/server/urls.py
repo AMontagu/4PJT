@@ -35,6 +35,7 @@ urlpatterns = [
     url(r'^checkfriendship/', views.checkFriendship),
     url(r'^giveadminright/', views.giveAdminRight),
     url(r'^banuser/', views.banUser),
+    url(r'^changeavatar/', views.changeAvatar),
     url(r'^api-token-auth/', tokenView.obtain_auth_token),
     url(r'^user-autocomplete/$', views.userAutocomplete)
 ]
