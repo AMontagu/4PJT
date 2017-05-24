@@ -21,8 +21,8 @@
 
             <button type="button" class="btnAction">Change Password</button>
           </div>
-          <div class="form-login col-xs-12 col-md-4">
-            <!-- profile picture here-->
+          <div class="col-xs-12 col-md-4 avatarContainer">
+            <img :src="getAvatarSrc()"/>
           </div>
         </div>
 
@@ -50,8 +50,14 @@
 
             <button type="button" class="btnAction">Change Password</button>
           </div>
-          <div class="form-login col-xs-12 col-md-4">
-            <!-- profile picture here-->
+          <div class="col-xs-12 col-md-4 avatarContainer">
+
+            <img :src="getAvatarSrc()"/>
+
+            <input type="hidden" name="MAX_FILE_SIZE" value="26214400"/>
+            <input type="file" name="avatar" id="avatar" class="hidden" v-on:change.prevent="fileUpload">
+            <label for="avatar" class="btn btn-primary changeAvatarLabel">Change Avatar</label>
+            <p class="inputError">{{ uploadError }}</p>
           </div>
         </div>
 
@@ -68,13 +74,14 @@
 <script>
 import {QwirkUser} from '../../../static/js/model.js';
 export default{
-    name:"UserProfile",
+    name:'UserProfile',
     data(){
         return{
           qwirkUser: new QwirkUser(),
-          userName: "",
+          userName: '',
           isUserConnected: true,
           editProfile: false,
+          uploadError: '',
         }
     },
     created: function(){
@@ -117,6 +124,43 @@ export default{
         }, (err) => {
           console.log("error :", err);
         });
+      },
+      fileUpload: function (e) {
+        this.files = e.target.files || e.dataTransfer.files;
+
+        if (this.files.length > 0) {
+          this.postFile(false)
+        }
+      },
+      postFile: function (forceUpdate) {
+        let formData = new FormData();
+        formData.append('file', this.files[0]);
+
+        this.$http.post(this.$root.server + '/changeavatar/', formData).then((response) => {
+
+        	let data = response.body;
+
+        	if(typeof data === 'string'){
+        		data = JSON.parse(data)
+          }
+
+          this.$root.qwirkUser.avatar = data.name + '?' +new Date().getMilliseconds();
+
+        }, (response) => {
+          console.error(response);
+        });
+      },
+      getAvatarSrc(){
+      	let avatar = "";
+      	if(this.isUserConnected){
+      		avatar = this.$root.qwirkUser.avatar;
+        }
+
+        if(typeof avatar === 'undefined' || avatar === null || avatar === ""){
+          return '/static/media/defaultUser.png';
+        }else{
+          return '/static/media/avatar/' + avatar;
+        }
       }
     },
     watch: {
@@ -132,4 +176,23 @@ export default{
 </script>
 
 <style scoped>
+
+  .inputError{
+    color: red;
+  }
+
+  .avatarContainer{
+    padding: 50px;
+    margin: 0 auto;
+  }
+
+  .avatarContainer img{
+    max-width: 100%;
+    max-height: 400px;
+  }
+
+  .changeAvatarLabel{
+    margin: 25px;
+  }
+
 </style>

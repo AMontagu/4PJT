@@ -13,3 +13,4 @@ Twisted>=17.1.0
 txaio>=2.6.1
 urllib3>=1.20
 zope.interface>=4.3.3
+Pillow>=4.1.1

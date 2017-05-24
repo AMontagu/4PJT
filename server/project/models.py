@@ -1,6 +1,11 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
+from django.core.files.storage import FileSystemStorage
+from os import path
+from server.settings import BASE_DIR
 
+fs = FileSystemStorage(location=path.join(BASE_DIR, '../web-app/static/media/avatar'))
+# fs = FileSystemStorage(location=BASE_DIR)
 
 class QwirkGroup(models.Model):
 	name = models.CharField(max_length=20, unique=True)
@@ -21,6 +26,7 @@ class QwirkUser(models.Model):
 	contacts = models.ManyToManyField('Contact', blank=True)
 	qwirkGroups = models.ManyToManyField(QwirkGroup, blank=True)
 	status = models.CharField(max_length=10)
+	avatar = models.ImageField(storage=fs, blank=True, null=True)
 
 	def __str__(self):
 		return str(self.user.username)
