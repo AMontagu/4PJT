@@ -29,20 +29,23 @@ new Vue({
       serverIp: "localhost",
       serverPort: 8000,
       serverRtcIp: "localhost",
-      serverRtcPort: 9000,
+      serverRtcPort: 9001,
       httpProtocol: location.protocol === 'https:' ? 'https://' : 'http://',
       wssProtocol: location.protocol === 'https:' ? 'wss://' : 'ws://',
     }
   },
   computed: {
     wssServer(){
-      return this.wssProtocol + this.serverIp + ':' + this.serverPort;
+      //return this.wssProtocol + this.serverIp + ':' + this.serverPort;
+      return '/server';
     },
     server(){
-      return this.httpProtocol + this.serverIp + ':' + this.serverPort;
+      //return this.httpProtocol + this.serverIp + ':' + this.serverPort;
+      return '/server';
     },
     serverRtc(){
-      return this.httpProtocol + this.serverRtcIp + ':' + this.serverRtcPort;
+      //return this.httpProtocol + this.serverRtcIp + ':' + this.serverRtcPort;
+      return '/rtc';
     }
   },
   components: { App }
