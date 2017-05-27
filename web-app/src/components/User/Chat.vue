@@ -110,16 +110,6 @@
         <input class="inputChat" type="text" v-model="inputText" :disabled="!socketIsOpen"
                v-on:keyup.enter="sendText"/>
 
-        <!--<div class="btn-group dropup chatOptions">
-          <button type="button" id="primary_file_button" data-js="primary_file_button" class="btn_unstyle file_upload_btn" aria-label="File menu">
-            <i class="glyphicon glyphicon-plus"></i>
-          </button>
-          <ul class="dropdown-menu">
-            <li>Upload file</li>
-            <li>Upload code</li>
-          </ul>
-        </div>-->
-
         <div class="btn-group dropup chatOptions">
           <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><i class="glyphicon glyphicon-plus"></i></button>
           <ul class="dropdown-menu listActions">
