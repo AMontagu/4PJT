@@ -29,7 +29,7 @@ export default new Router({
           next('/');
         } else {
 
-          Vue.http.get('http://localhost:8000/isloggedin/', {headers: {'Authorization': "Token " + Vue.cookie.get('token')}}).then( (response) => {
+          Vue.http.get('/server/isloggedin/', {headers: {'Authorization': "Token " + Vue.cookie.get('token')}}).then( (response) => {
 
             if (response.body == "True") {
               console.log("user is logged in");
