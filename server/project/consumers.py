@@ -123,7 +123,7 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 				qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"])  # TODO check with exist or with try catch but not sur because check in connect need to be tested
 
 				if content["action"] == "message":
-					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"], type="message")
+					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"], type=content["content"]["type"])
 					message.save()
 
 					messageSerialized = MessageSerializer(message)

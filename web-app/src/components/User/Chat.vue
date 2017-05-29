@@ -68,7 +68,10 @@
               <div class="messageUserName">
                 <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
               </div>
-              <div class="messageText" v-html="getMarkedMessage(message.text)">
+              <div v-if="message.type != 'codeMessage'" class="messageText" v-html="getMarkedMessage(message.text)">
+              </div>
+              <div v-else-if="message.type == 'codeMessage'">
+                <pre class="prettyprint linenums codeBlock" v-html="getCodeMessage(message.text)"></pre>
               </div>
             </div>
           </div>
@@ -127,6 +130,7 @@
           </div>
 
         </div>
+
       </div>
       <div class="chatBar">
         <textarea class="inputChat" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter="sendText('message', $event)"></textarea>
@@ -172,8 +176,6 @@
     <modal v-if="showModalCodeSnippet" @close="showModalCodeSnippet = false">
       <h3 slot="header">Add a code snippet</h3>
       <div slot="body">
-        <label for="langage">Language: </label>
-        <input type="text" id="langage" placeholder="javascript" v-model="langageCode"/>
         <label for="codeArea">Language: </label>
         <textarea id="codeArea" v-model="inputText" placeholder="Your code here"></textarea>
       </div>
@@ -183,7 +185,7 @@
         <button class="modal-default-button" @click="showModalCodeSnippet = false">
           Close
         </button>
-        <button class="modal-default-button" v-on:click="SendCode()">
+        <button class="modal-default-button" v-on:click="sendText('codeMessage')">
           Send
         </button>
       </div>
@@ -197,7 +199,6 @@
   import Modal from '../shared/Modal.vue'
   import {Message, GroupInformations, QwirkUser} from '../../../static/js/model.js';
   import Marked from 'marked';
-  import rainbow from '';
   export default{
     name: "UserChat",
     data(){
@@ -235,6 +236,8 @@
         this.socket.onopen = this.socketOpen;
         this.socket.onerror = this.socketError;
       }
+
+      PR.prettyPrintOne()
     },
     methods: {
       displayMessage: function (type) {
@@ -249,11 +252,13 @@
         console.log(this.inputText)
         console.log(this.inputText != '')
         console.log({inputText: this.inputText.trim()});
-        console.log(event.shiftKey)
-        if (typeof this.socket !== 'undefined' && this.inputText.trim() !== '' && !event.shiftKey) {
+        if (typeof this.socket !== 'undefined' && this.inputText.trim() !== '' && (typeof event === 'undefined' || !event.shiftKey)) {
           let text = this.inputText.replace(/(?:\r\n|\r|\n)/g, '<br />');
-          this.socket.send(JSON.stringify({action: 'message', content: {text: text, type: type, langageCode:this.langageCode}}));
+          this.socket.send(JSON.stringify({action: 'message', content: {text: text, type: type}}));
           this.inputText = "";
+          if(this.showModalCodeSnippet){
+          	this.showModalCodeSnippet = false;
+          }
         } else {
           console.log("socket is undefined or message empty");
         }
@@ -346,6 +351,9 @@
 
         let text = message.replace('<br />', '\n');
       	return Marked(text);
+      },
+      getCodeMessage: function(message) {
+        return PR.prettyPrintOne(message);
       },
       callWebRTC: function () {
         console.log("we call !");
