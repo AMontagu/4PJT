@@ -1,5 +1,7 @@
+import mimetypes
 from datetime import datetime
 from importlib import import_module
+from wsgiref.util import FileWrapper
 
 from channels import Group
 from django.contrib.auth.decorators import login_required
@@ -9,6 +11,7 @@ from django.shortcuts import render
 
 from django.contrib.auth import authenticate, login, logout
 from django.utils.timezone import utc
+from os import path
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, renderer_classes, \
@@ -19,10 +22,12 @@ from rest_framework.renderers import JSONRenderer
 
 from project.models import QwirkUser, Contact, QwirkGroup, Notification, Message
 from project.serializer import QwirkUserSerializer, QwirkUserSerializerSimple, QwirkGroupSerializer, \
-	NotificationSerializer, ContactSerializer, NotificationSerializerSimple
+	NotificationSerializer, ContactSerializer, NotificationSerializerSimple, MessageSerializer
 from server import settings
 from server.customLogging import *
 import json
+
+from django.utils.encoding import smart_str
 
 
 @api_view(['POST'])
@@ -437,10 +442,8 @@ def userAutocomplete(request):
 
 
 @api_view(['POST'])
-#@parser_classes((FileUploadParser,))
 def changeAvatar(request):
 	if request.user is not None:
-		print(request.FILES['file'])
 
 		avatar = request.FILES['file']
 
@@ -451,3 +454,82 @@ def changeAvatar(request):
 		return HttpResponse(jsonResponse, status=200)
 	else:
 		return HttpResponse(status=401)
+
+
+@api_view(['POST'])
+def postFile(request):
+	if request.user is not None:
+		file = request.FILES['file']
+		groupName = request.data['groupName']
+		type = request.data['type']
+
+		qwirkGroup = QwirkGroup.objects.get(name=groupName)
+
+		#TODO security
+		#if request.user.qwirkuser in qwirkGroup.qwirkuser_set.all() or request.user.qwirkuser in qwirkGroup.contact_set.all():
+
+		message = Message(qwirkUser=request.user.qwirkuser, qwirkGroup=qwirkGroup, text=request.user.username + " upload a file", dateTime=datetime.now(), type=type)
+		message.file.save(file.name, file)
+		message.save()
+
+		messageSerialized = MessageSerializer(message)
+
+		text = json.dumps({
+			"action": "new-message",
+			"content": json.dumps(messageSerialized.data)
+		})
+		Group(groupName).send({
+			"text": text,
+		})
+
+		if qwirkGroup.isContactGroup:
+			for contact in qwirkGroup.contact_set.all():
+				print(contact.qwirkUser)
+				if contact.qwirkUser != request.user.qwirkuser:
+					notification = Notification.objects.create(message=message, qwirkUser=contact.qwirkUser)
+					notification.save()
+					serializer = NotificationSerializerSimple(notification)
+					text = json.dumps({
+						"action": "notification",
+						"notification": serializer.data
+					})
+					Group("user" + contact.qwirkUser.user.username).send({
+						"text": text,
+					})
+		else:
+			for qwirkUser in qwirkGroup.qwirkuser_set.all():
+				print(qwirkUser)
+				if qwirkUser != request.user.qwirkuser:
+					notification = Notification.objects.create(message=message, qwirkUser=qwirkUser)
+					notification.save()
+					serializer = NotificationSerializerSimple(notification)
+					text = json.dumps({
+						"action": "notification",
+						"notification": serializer.data
+					})
+					Group("user" + qwirkUser.user.username).send({
+						"text": text,
+					})
+		return HttpResponse(status=200)
+		#else:
+		#	return HttpResponse(status=403)
+	else:
+		return HttpResponse(status=401)
+
+
+def downloadFile(request):
+
+	fileName = request.GET.get('fileName', "")
+	pathToFile = path.join(settings.BASE_DIR, '../web-app/static/media/files/' + fileName)
+
+	wrapper = FileWrapper(open(pathToFile, "rb"))
+	content_type = mimetypes.guess_type(pathToFile)[0]
+
+	print(content_type)
+
+	response = HttpResponse(wrapper, content_type=content_type)
+	response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(fileName)
+	#response['Content-Length']      = path.getsize(pathToFile)
+	#response['X-Sendfile'] = smart_str(pathToFile)
+
+	return response
