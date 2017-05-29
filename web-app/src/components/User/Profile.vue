@@ -126,15 +126,15 @@ export default{
         });
       },
       fileUpload: function (e) {
-        this.files = e.target.files || e.dataTransfer.files;
+        let files = e.target.files || e.dataTransfer.files;
 
-        if (this.files.length > 0) {
-          this.postFile(false)
+        if (files.length > 0) {
+          this.postFile(files)
         }
       },
-      postFile: function (forceUpdate) {
+      postFile: function (files) {
         let formData = new FormData();
-        formData.append('file', this.files[0]);
+        formData.append('file', files[0]);
 
         this.$http.post(this.$root.server + '/changeavatar/', formData).then((response) => {
 

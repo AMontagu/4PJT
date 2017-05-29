@@ -68,8 +68,7 @@
               <div class="messageUserName">
                 <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
               </div>
-              <div class="messageText">
-                <p>{{message.text}}</p>
+              <div class="messageText" v-html="getMarkedMessage(message.text)">
               </div>
             </div>
           </div>
@@ -104,21 +103,45 @@
             </div>
 
           </div>
+
+          <div v-if="message.type == 'fileMessage'">
+
+            <div class="containerFile">
+              <div class="fileAction">
+                <p>{{ message.file }}</p>
+                <a class="btn btnAction" :href="$root.server+'/downloadfile/?fileName=' + message.file">Download file</a>
+              </div>
+            </div>
+
+          </div>
+
+          <div v-if="message.type == 'imageMessage'">
+
+            <div class="containerImageMessage">
+              <div class="containerImage">
+                <img :src="'/static/media/files/' + message.file"/>
+                <a class="btn" :href="$root.server+'/downloadfile/?fileName=' + message.file">Download</a>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
       <div class="chatBar">
-        <input class="inputChat" type="text" v-model="inputText" :disabled="!socketIsOpen"
-               v-on:keyup.enter="sendText"/>
+        <textarea class="inputChat" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter="sendText('message', $event)"></textarea>
 
         <div class="btn-group dropup chatOptions">
           <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><i class="glyphicon glyphicon-plus"></i></button>
           <ul class="dropdown-menu listActions">
-            <li><a>Upload file</a></li>
-            <li><a>Upload code</a></li>
+            <li><label for="file_upload">Upload file</label></li>
+            <li><label for="image_upload">Upload image</label></li>
+            <li><a v-on:click="showModalCodeSnippet = true">Upload code snippet</a></li>
           </ul>
         </div>
 
-        <input type="file" id="file_upload" class="hidden" multiple="multiple">
+        <input type="file" id="file_upload" class="hidden" v-on:change.prevent="fileUpload">
+        <input type="file" id="image_upload" class="hidden" v-on:change.prevent="imageUpload">
 
         <button type="button" class="btn_unstyle emo_menu">
           <i class="glyphicon glyphicon-heart"></i>
@@ -146,6 +169,26 @@
       </div>
     </modal>
 
+    <modal v-if="showModalCodeSnippet" @close="showModalCodeSnippet = false">
+      <h3 slot="header">Add a code snippet</h3>
+      <div slot="body">
+        <label for="langage">Language: </label>
+        <input type="text" id="langage" placeholder="javascript" v-model="langageCode"/>
+        <label for="codeArea">Language: </label>
+        <textarea id="codeArea" v-model="inputText" placeholder="Your code here"></textarea>
+      </div>
+
+
+      <div slot="footer">
+        <button class="modal-default-button" @click="showModalCodeSnippet = false">
+          Close
+        </button>
+        <button class="modal-default-button" v-on:click="SendCode()">
+          Send
+        </button>
+      </div>
+    </modal>
+
   </div>
 </template>
 
@@ -153,6 +196,8 @@
   import UserHeader from './Header.vue'
   import Modal from '../shared/Modal.vue'
   import {Message, GroupInformations, QwirkUser} from '../../../static/js/model.js';
+  import Marked from 'marked';
+  import rainbow from '';
   export default{
     name: "UserChat",
     data(){
@@ -169,12 +214,17 @@
         userCallUsername: "",
         showModal: false,
         isAudioEnable: true,
-        isVideoEnable: true
+        isVideoEnable: true,
+        langageCode: '',
+        showModalCodeSnippet: false
       }
     },
     created: function () {
     },
     mounted: function () {
+
+
+      console.log(Marked('I am using __markdown__.'));
 
       //console.log(this.$route.params);
       this.currentGroupName = this.$route.params.name;
@@ -194,14 +244,19 @@
         let objDiv = document.getElementById("containerMessages");
         objDiv.scrollTop = objDiv.scrollHeight;
       },
-      sendText: function () {
+      sendText: function (type, event) {
         console.log("send text: " + this.inputText)
-        if (this.socket != undefined) {
-          this.socket.send(JSON.stringify({action: 'message', content: {text: this.inputText}}));
+        console.log(this.inputText)
+        console.log(this.inputText != '')
+        console.log({inputText: this.inputText.trim()});
+        console.log(event.shiftKey)
+        if (typeof this.socket !== 'undefined' && this.inputText.trim() !== '' && !event.shiftKey) {
+          let text = this.inputText.replace(/(?:\r\n|\r|\n)/g, '<br />');
+          this.socket.send(JSON.stringify({action: 'message', content: {text: text, type: type, langageCode:this.langageCode}}));
+          this.inputText = "";
         } else {
-          console.log("socket is undefined");
+          console.log("socket is undefined or message empty");
         }
-        this.inputText = "";
       },
       socketOpen: function () {
         this.socketIsOpen = true;
@@ -258,6 +313,39 @@
       blockUser: function (username) {
         this.socket.send(JSON.stringify({action: 'block-contact', content: {username: username}}));
         this.groupInformations.statusContact = "Block";
+      },
+      fileUpload: function(e) {
+        let files = e.target.files || e.dataTransfer.files;
+
+        if (files.length > 0) {
+          this.postFile(files, 'fileMessage')
+        }
+      },
+      imageUpload: function(e) {
+        let files = e.target.files || e.dataTransfer.files;
+
+        if (files.length > 0) {
+          this.postFile(files, 'imageMessage')
+        }
+      },
+      postFile: function (files, type) {
+        let formData = new FormData();
+        formData.append('file', files[0]);
+        formData.append('groupName', this.currentGroupName);
+        formData.append('type', type);
+
+        this.$http.post(this.$root.server + '/postfile/', formData).then((response) => {
+
+          let data = response.body;
+
+        }, (response) => {
+          console.error(response);
+        });
+      },
+      getMarkedMessage: function(message) {
+
+        let text = message.replace('<br />', '\n');
+      	return Marked(text);
       },
       callWebRTC: function () {
         console.log("we call !");
@@ -593,12 +681,31 @@
   .listActions li {
     display: block;
     color: #000;
-    padding: 8px 16px;
     text-decoration: none;
     text-align: left;
   }
 
   .listActions li:hover {
+    background-color: #555;
+    color: white;
+  }
+
+  .dropdown-menu>li>label {
+    display: block;
+    padding: 10px 20px;
+    clear: both;
+    font-weight: normal;
+    line-height: 1.428571429;
+    color: #333;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .dropdown-menu>li>a {
+    padding: 10px 20px;
+  }
+
+  li label:hover:not(.active) {
     background-color: #555;
     color: white;
   }
@@ -628,7 +735,7 @@
   }
 
   .containerScroll {
-    height: calc(100% - 50px);
+    height: calc(100% - 60px);
     overflow-y: scroll;
     overflow-x: hidden;
   }
