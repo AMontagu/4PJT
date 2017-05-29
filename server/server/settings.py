@@ -127,10 +127,10 @@ if DEBUGDATABASE:
 else:
 	DATABASES = {
 		'default': {
-			'NAME': 'master',
+			'NAME': 'qwirk',
 			'ENGINE': 'sqlserver_ado',
-			'HOST': '192.168.30.51',
-			'USER': 'Qwirk.lan\\Administrator',
+			'HOST': '192.168.30.23',
+			'USER': 'administrator',
 			'PASSWORD': 'Supinf0',
 		}
 	}
