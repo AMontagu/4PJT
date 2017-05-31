@@ -68,7 +68,11 @@
               <div class="messageUserName">
                 <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
               </div>
-              <div v-if="message.type != 'codeMessage'" class="messageText" v-html="getMarkedMessage(message.text)">
+              <div v-if="message.type != 'codeMessage'" class="messageText">
+                <span v-for="element in getElementsInMessage(message.text)" v-if="element.type == 'text'">
+                  {{element.message}}
+                </span>
+                <emoji :emoji="element.emoji.colons" v-else></emoji>
               </div>
               <div v-else-if="message.type == 'codeMessage'">
                 <pre class="prettyprint linenums codeBlock" v-html="getCodeMessage(message.text)"></pre>
@@ -128,12 +132,10 @@
             </div>
 
           </div>
-
         </div>
-
       </div>
       <div class="chatBar">
-        <textarea class="inputChat" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter="sendText('message', $event)"></textarea>
+        <textarea class="inputChat" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter.prevent="sendText('message', $event)"></textarea>
 
         <div class="btn-group dropup chatOptions">
           <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><i class="glyphicon glyphicon-plus"></i></button>
@@ -150,6 +152,13 @@
         <button type="button" class="btn_unstyle emo_menu">
           <i class="glyphicon glyphicon-heart"></i>
         </button>
+
+        <picker
+          title="Pick your emoji…"
+          emoji="point_up"
+          @click="handleEmoji"
+        >
+        </picker>
 
       </div>
     </div>
@@ -199,6 +208,8 @@
   import Modal from '../shared/Modal.vue'
   import {Message, GroupInformations, QwirkUser} from '../../../static/js/model.js';
   import Marked from 'marked';
+  import twemoji from 'twemoji';
+
   export default{
     name: "UserChat",
     data(){
@@ -253,6 +264,7 @@
         console.log(this.inputText != '')
         console.log({inputText: this.inputText.trim()});
         if (typeof this.socket !== 'undefined' && this.inputText.trim() !== '' && (typeof event === 'undefined' || !event.shiftKey)) {
+          event.preventDefault();
           let text = this.inputText.replace(/(?:\r\n|\r|\n)/g, '<br />');
           this.socket.send(JSON.stringify({action: 'message', content: {text: text, type: type}}));
           this.inputText = "";
@@ -349,11 +361,63 @@
       },
       getMarkedMessage: function(message) {
 
-        let text = message.replace('<br />', '\n');
-      	return Marked(text);
+      	this.findEmoji(message);
+
+        //let text = message.replace('<br />', '\n');
+
+        let r = /\\u([\d\w]{4})/gi;
+        message = message.replace(r, function (match, grp) {
+          return String.fromCharCode(parseInt(grp, 16)); } );
+
+      	return Marked(twemoji.parse(message));
       },
       getCodeMessage: function(message) {
         return PR.prettyPrintOne(message);
+      },
+      getElementsInMessage: function(message){
+
+      	let elements = [];
+
+        let emojis = this.findEmoji(message);
+
+        let currentOffset = 0;
+
+        if(emojis.length > 0){
+        	emojis.forEach((emoji) => {
+        		let text = message.slice(currentOffset, emoji.offset);
+        		elements.push({type:'text', message: text});
+            elements.push({type:'emoji', emoji: emoji});
+            currentOffset = emoji.offset + emoji.length;
+          });
+        }else{
+        	elements.push({type:'text', message: message});
+        }
+
+      	return elements;
+      },
+      findEmoji: function(message){
+        let regex = new RegExp('(^|\\s)(\:[a-zA-Z0-9-_+]+\:(\:skin-tone-[2-6]\:)?)', 'g');
+
+        let match;
+        let emojis = [];
+        while (match = regex.exec(message)) {
+          let colons = match[2];
+          let offset = match.index + match[1].length;
+          let length = colons.length;
+
+
+          emojis.push({colons: colons, offset: offset, length: length})
+        }
+
+        return emojis;
+      },
+      handleEmoji: function (emoji, event) {
+      	console.log(emoji);
+        //this.inputText += emoji.native;
+
+
+
+        this.inputText += emoji.colons
       },
       callWebRTC: function () {
         console.log("we call !");
