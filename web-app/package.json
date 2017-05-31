@@ -11,7 +11,6 @@
   "dependencies": {
     "emoji-mart-vue": "^0.5.0",
     "marked": "^0.3.6",
-    "twemoji": "^2.3.0",
     "vue": "^2.1.0",
     "vue-cookie": "^1.1.3",
     "vue-resource": "^1.0.3",

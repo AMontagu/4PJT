@@ -26,4 +26,9 @@ export default {
   color: #2c3e50;
   height: 100%;
 }
+
+  p{
+    margin: 0;
+  }
+
 </style>

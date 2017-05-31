@@ -69,10 +69,10 @@
                 <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
               </div>
               <div v-if="message.type != 'codeMessage'" class="messageText">
-                <span v-for="element in getElementsInMessage(message.text)" v-if="element.type == 'text'">
-                  {{element.message}}
-                </span>
-                <emoji :emoji="element.emoji.colons" v-else></emoji>
+                <p v-for="line in getLines(message.text)" class="containLine">
+                  <span v-for="element in getElementsInMessage(line)" v-if="element.type == 'text'" v-html="element.message" class="spanLine"></span>
+                  <emoji :emoji="element.emoji.colons" v-else></emoji>
+                </p>
               </div>
               <div v-else-if="message.type == 'codeMessage'">
                 <pre class="prettyprint linenums codeBlock" v-html="getCodeMessage(message.text)"></pre>
@@ -208,7 +208,6 @@
   import Modal from '../shared/Modal.vue'
   import {Message, GroupInformations, QwirkUser} from '../../../static/js/model.js';
   import Marked from 'marked';
-  import twemoji from 'twemoji';
 
   export default{
     name: "UserChat",
@@ -359,20 +358,11 @@
           console.error(response);
         });
       },
-      getMarkedMessage: function(message) {
-
-      	this.findEmoji(message);
-
-        //let text = message.replace('<br />', '\n');
-
-        let r = /\\u([\d\w]{4})/gi;
-        message = message.replace(r, function (match, grp) {
-          return String.fromCharCode(parseInt(grp, 16)); } );
-
-      	return Marked(twemoji.parse(message));
-      },
       getCodeMessage: function(message) {
         return PR.prettyPrintOne(message);
+      },
+      getLines: function(message){
+      	return message.split('<br />');
       },
       getElementsInMessage: function(message){
 
@@ -385,15 +375,19 @@
         if(emojis.length > 0){
         	emojis.forEach((emoji) => {
         		let text = message.slice(currentOffset, emoji.offset);
-        		elements.push({type:'text', message: text});
+        		elements.push({type:'text', message: Marked(text)});
             elements.push({type:'emoji', emoji: emoji});
             currentOffset = emoji.offset + emoji.length;
           });
         }else{
-        	elements.push({type:'text', message: message});
+        	elements.push({type:'text', message: Marked(message)});
         }
 
       	return elements;
+      },
+      handleEmoji: function (emoji, event) {
+        console.log(emoji);
+        this.inputText += emoji.colons
       },
       findEmoji: function(message){
         let regex = new RegExp('(^|\\s)(\:[a-zA-Z0-9-_+]+\:(\:skin-tone-[2-6]\:)?)', 'g');
@@ -410,14 +404,6 @@
         }
 
         return emojis;
-      },
-      handleEmoji: function (emoji, event) {
-      	console.log(emoji);
-        //this.inputText += emoji.native;
-
-
-
-        this.inputText += emoji.colons
       },
       callWebRTC: function () {
         console.log("we call !");
@@ -780,6 +766,23 @@
   li label:hover:not(.active) {
     background-color: #555;
     color: white;
+  }
+
+  .spanLine{
+    display: inline-block
+  }
+
+  .containLine p{
+    margin: 0;
+  }
+
+  .containLine{
+    display: flex;
+    align-items: center;
+  }
+
+  .emoji-mart-emoji{
+    display: flex !important;
   }
 
   #containVideoChat {
