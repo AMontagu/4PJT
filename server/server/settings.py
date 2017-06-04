@@ -128,10 +128,11 @@ else:
 	DATABASES = {
 		'default': {
 			'NAME': 'qwirk',
-			'ENGINE': 'sqlserver_ado',
-			'HOST': '192.168.30.23',
-			'USER': 'administrator',
+			'ENGINE': 'django.db.backends.mysql',
+			'HOST': '192.168.20.22',
+			'USER': 'root',
 			'PASSWORD': 'Supinf0',
+        	'PORT': '3306',
 		}
 	}
 
