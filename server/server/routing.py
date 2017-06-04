@@ -15,5 +15,5 @@ apiSocket = [
 ]
 
 channel_routing = [
-	include(apiSocket, path=r'^/server/ws')
+	include(apiSocket, path=r'^/ws')
 ]
