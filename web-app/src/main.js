@@ -34,7 +34,7 @@ new Vue({
   computed: {
     wssServer(){
       //return this.wssProtocol + this.serverIp + ':' + this.serverPort;
-      return this.wssProtocol + location.host + '/server';
+      return this.wssProtocol + location.host;
     },
     server(){
       //return this.httpProtocol + this.serverIp + ':' + this.serverPort;
