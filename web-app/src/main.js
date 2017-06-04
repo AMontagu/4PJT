@@ -42,7 +42,7 @@ new Vue({
     },
     serverRtc(){
       //return this.httpProtocol + this.serverRtcIp + ':' + this.serverRtcPort;
-      return '/rtc/';
+      return '/';
     }
   },
   components: { App }
