@@ -144,7 +144,7 @@
       </picker>
 
       <div class="chatBar">
-        <textarea class="inputChat" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter.prevent="sendText('message', $event)"></textarea>
+        <textarea id="inputTextAreaChat" class="inputChat" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup="autoGrow" v-on:keyup.enter.prevent="sendText('message', $event)"></textarea>
 
         <div class="btn-group dropup chatOptions">
           <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><i class="glyphicon glyphicon-plus"></i></button>
@@ -231,6 +231,11 @@
         langageCode: '',
         showModalCodeSnippet: false,
         showEmoji: false,
+        messageRecupered: 0,
+        oldScrollHeight: 0,
+        originalSizeContainerMessages: 0,
+        originalSizeTextAreaInput: 0,
+        maxHeightTextAreaInput: 150,
       }
     },
     created: function () {
@@ -251,6 +256,16 @@
       }
 
       PR.prettyPrintOne()
+
+      let content = document.getElementById("containerMessages");
+      content.onscroll = () => {
+      	if(content.scrollTop === 0){
+          this.socket.send(JSON.stringify({action: 'get-message', content: {startMessage: this.messageRecupered, endMessage: this.messageRecupered+30}}));
+        }
+      }
+
+      this.originalSizeContainerMessages = document.getElementById("containerMessages").clientHeight;
+      this.originalSizeTextAreaInput = document.getElementById("inputTextAreaChat").clientHeight;
     },
     methods: {
       displayMessage: function (type) {
@@ -258,30 +273,53 @@
       },
       scrollUpdated: function () {
         let objDiv = document.getElementById("containerMessages");
+        objDiv.scrollTop = objDiv.scrollHeight - this.oldScrollHeight;
+        this.oldScrollHeight = objDiv.scrollHeight;
+      },
+      scrollBottom: function () {
+        let objDiv = document.getElementById("containerMessages");
         objDiv.scrollTop = objDiv.scrollHeight;
       },
       sendText: function (type, event) {
-        console.log("send text: " + this.inputText)
-        console.log(this.inputText)
-        console.log(this.inputText != '')
-        console.log({inputText: this.inputText.trim()});
-        if (typeof this.socket !== 'undefined' && this.inputText.trim() !== '' && (typeof event === 'undefined' || !event.shiftKey)) {
-          event.preventDefault();
-          let text = this.inputText.replace(/(?:\r\n|\r|\n)/g, '<br />');
-          this.socket.send(JSON.stringify({action: 'message', content: {text: text, type: type}}));
-          this.inputText = "";
-          if(this.showModalCodeSnippet){
-          	this.showModalCodeSnippet = false;
+        /*console.log("send text: " + this.inputText)*/
+        if (typeof this.socket !== 'undefined' && this.inputText.trim() !== '') {
+        	if(typeof event === 'undefined' || !event.shiftKey){
+            event.preventDefault();
+            let text = this.inputText.replace(/(?:\r\n|\r|\n)/g, '<br />');
+            this.socket.send(JSON.stringify({action: 'message', content: {text: text, type: type}}));
+            this.inputText = "";
+            let textAreaChat = document.getElementById("inputTextAreaChat");
+            textAreaChat.style.height = this.originalSizeTextAreaInput+"px";
+            let containerMessages = document.getElementById("containerMessages");
+            containerMessages.style.height = this.originalSizeContainerMessages+"px";
+            if(this.showModalCodeSnippet){
+              this.showModalCodeSnippet = false;
+            }
           }
         } else {
           console.log("socket is undefined or message empty");
         }
       },
+      autoGrow: function() {
+      	let textAreaChat = document.getElementById("inputTextAreaChat");
+        textAreaChat.style.height = (textAreaChat.scrollHeight + 4)+"px";
+
+        let containerMessages = document.getElementById("containerMessages");
+        /*console.log("containerMessages.clientHeight = ", containerMessages.clientHeight);
+        console.log("textAreaChat.scrollHeight = ", textAreaChat.scrollHeight);
+        console.log("originalSizeContainerMessages = ", this.originalSizeContainerMessages);*/
+        let scrollHeight = textAreaChat.scrollHeight;
+        if(scrollHeight > this.maxHeightTextAreaInput){
+          scrollHeight = this.maxHeightTextAreaInput;
+        }
+        containerMessages.style.height = this.originalSizeContainerMessages - (scrollHeight - this.originalSizeTextAreaInput) +"px";
+        this.scrollBottom();
+      },
       socketOpen: function () {
         this.socketIsOpen = true;
         console.log("socket is open");
         //get the last fifty messages of this discussion
-        this.socket.send(JSON.stringify({action: 'get-message', content: {startMessage: 0, endMessage: 30}}));
+        this.socket.send(JSON.stringify({action: 'get-message', content: {startMessage: this.messageRecupered, endMessage: this.messageRecupered + 30}}));
         this.socket.send(JSON.stringify({action: 'get-group-informations'}));
       },
       socketError: function (err) {
@@ -294,17 +332,20 @@
         if (data.action === "new-message") {
           this.messages.push(JSON.parse(data.content));
           //console.log(this.messages);
+          this.messageRecupered = this.messages.length;
           setTimeout(() => {
-            this.scrollUpdated()
+            this.scrollBottom()
           }, 200);
         } else if (data.action === "saved-messages") {
-          //console.log(data.content)
-          this.messages = this.messages.concat(JSON.parse(data.content).reverse());
-          //console.log(this.messages);
+          //console.log(data.content);
 
+          this.messages = JSON.parse(data.content).reverse().concat(this.messages);
           setTimeout(() => {
             this.scrollUpdated()
           }, 300);
+
+          this.messageRecupered = this.messages.length;
+
         } else if (data.action === "group-informations") {
           //console.log(data.content)
           this.groupInformations.copyConstructor(data.content);
@@ -688,7 +729,7 @@
   .inputChat  {
     padding: 0 50px 0 50px;
     height: auto;
-    max-height: none;
+    max-height: 150px;
     min-height: 41px;
 
     overflow: auto;
@@ -860,6 +901,7 @@
     display: block;
     margin-left: 20px;
     position: relative;
+    margin-bottom: 5px;
   }
 
   .pictureUser {

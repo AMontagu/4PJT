@@ -174,7 +174,6 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 				elif content["action"] == "get-message":
 
 					try:
-						# TODO MAYBE THINK ABOUT USING message_qwirkGroup for cleaning all the notification
 						Notification.objects.filter(message__qwirkGroup__name=kwargs["groupname"],
 																	qwirkUser=user.qwirkuser).delete()
 					except Notification.DoesNotExist:
