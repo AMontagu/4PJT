@@ -300,6 +300,7 @@ export default{
 
             let txt = document.createTextNode("1");
             el.innerText = txt.textContent;
+            el.classList.add('active');
 
           } else {
 
@@ -318,6 +319,7 @@ export default{
 
                   let txt = document.createTextNode("1");
                   els[i].innerText = txt.textContent;
+                  els[i].classList.add('active');
 
                 } else {
 
@@ -448,6 +450,11 @@ export default{
 
   .chatKind{
     width:100%;
+  }
+
+  .chatKind a{
+    font-size: 18px;
+    line-height: 30px;
 
   }
 
@@ -483,6 +490,22 @@ export default{
   li a:hover:not(.active) {
     background-color: #555;
     color: white !important;
+  }
+
+  .notification{
+    width: 25px;
+    height: 25px;
+    margin-left: 10px;
+    font-size: 16px;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 25px;
+  }
+
+  .notification.active{
+    background-color: red;
+    border-radius: 50%;
   }
 
 </style>

@@ -69,6 +69,7 @@ def checkGroup(url, token):
 			userIsBanned = False
 
 			if token.user.qwirkuser in QwirkGroup.objects.get(name=groupName).blockedUsers.all():
+				print("user is banned")
 				userIsBanned = True
 
 			if contactRelationExist or (userIsInGroup and not userIsBanned):
