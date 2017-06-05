@@ -302,6 +302,7 @@
       },
       autoGrow: function() {
       	let textAreaChat = document.getElementById("inputTextAreaChat");
+        textAreaChat.style.height = "41px";
         textAreaChat.style.height = (textAreaChat.scrollHeight + 4)+"px";
 
         let containerMessages = document.getElementById("containerMessages");
@@ -727,8 +728,7 @@
   }
 
   .inputChat  {
-    padding: 0 50px 0 50px;
-    height: auto;
+    padding: 5px 75px 5px 55px;
     max-height: 150px;
     min-height: 41px;
 
@@ -756,7 +756,7 @@
   .emo_menu{
     position: absolute;
     z-index: 1;
-    right: 5px;
+    right: 20px;
     top: 0;
     width: 36px;
     height: 42px;
