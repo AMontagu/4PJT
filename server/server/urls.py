@@ -30,6 +30,7 @@ urlpatterns = [
     url(r'^useredit/', views.editUser),
     url(r'^creategroup/', views.createGroup),
     url(r'^addusertogroup/', views.addUserToGroup),
+    url(r'^joinchannel/', views.joinChannel),
     url(r'^removegroup/', views.removeGroup),
     url(r'^quitgroup/', views.quitGroup),
     url(r'^checkfriendship/', views.checkFriendship),

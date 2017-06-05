@@ -186,7 +186,7 @@ export default{
         });
       },
       quitGroup: function(){
-        this.$http.post(this.$root.server + '/quitGroup/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+        this.$http.post(this.$root.server + '/quitgroup/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
           console.log("successfully quitted ", this.currentGroupName);
           this.$router.go('/user/');
         });
