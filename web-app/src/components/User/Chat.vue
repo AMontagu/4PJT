@@ -657,6 +657,8 @@
       '$route' (to, from) {
         this.currentGroupName = this.$route.params.name;
         this.messages = [];
+        this.messageRecupered = 0;
+        this.oldScrollHeight = 0;
 
         if (this.socket != undefined) {
           this.socket.close();

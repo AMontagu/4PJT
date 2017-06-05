@@ -363,6 +363,7 @@ export default{
 
           let txt = document.createTextNode("");
           el.innerText = txt.textContent;
+          el.classList.remove("active");
         }
       }
       next();
