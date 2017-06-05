@@ -134,6 +134,15 @@
           </div>
         </div>
       </div>
+
+      <picker
+        v-if="showEmoji"
+        title="Pick your emoji…"
+        emoji="point_up"
+        @click="handleEmoji"
+      >
+      </picker>
+
       <div class="chatBar">
         <textarea class="inputChat" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup.enter.prevent="sendText('message', $event)"></textarea>
 
@@ -149,16 +158,9 @@
         <input type="file" id="file_upload" class="hidden" v-on:change.prevent="fileUpload">
         <input type="file" id="image_upload" class="hidden" v-on:change.prevent="imageUpload">
 
-        <button type="button" class="btn_unstyle emo_menu">
-          <i class="glyphicon glyphicon-heart"></i>
+        <button type="button" class="btn_unstyle emo_menu" v-on:click="displayEmoji()">
+          &#9786;
         </button>
-
-        <picker
-          title="Pick your emoji…"
-          emoji="point_up"
-          @click="handleEmoji"
-        >
-        </picker>
 
       </div>
     </div>
@@ -227,7 +229,8 @@
         isAudioEnable: true,
         isVideoEnable: true,
         langageCode: '',
-        showModalCodeSnippet: false
+        showModalCodeSnippet: false,
+        showEmoji: false,
       }
     },
     created: function () {
@@ -385,9 +388,29 @@
 
       	return elements;
       },
+      displayEmoji: function(){
+      	if(!this.showEmoji){
+          this.showEmoji = true;
+          let clickCount = 0;
+          let clickFunction = () => {
+            clickCount++;
+            if(clickCount > 1){
+              this.showEmoji = false;
+              clickCount = 0;
+              document.removeEventListener("click", clickFunction);
+            }
+          }
+          document.addEventListener("click", clickFunction);
+        }else{
+          this.showEmoji = false;
+        }
+      },
       handleEmoji: function (emoji, event) {
         console.log(emoji);
-        this.inputText += emoji.colons
+        if(this.inputText[this.inputText.length-1] != " "){
+          this.inputText += " "
+        }
+        this.inputText += emoji.colons + " ";
       },
       findEmoji: function(message){
         let regex = new RegExp('(^|\\s)(\:[a-zA-Z0-9-_+]+\:(\:skin-tone-[2-6]\:)?)', 'g');
@@ -700,6 +723,7 @@
     text-align: center;
     color: rgba(0,0,0,.35);
     opacity: 1;
+    font-size: 40px;
   }
 
   .chatOptions {
@@ -779,6 +803,12 @@
   .containLine{
     display: flex;
     align-items: center;
+  }
+
+  .emoji-mart{
+    position: absolute;
+    bottom: 70px;
+    right: 50px;
   }
 
   .emoji-mart-emoji{
