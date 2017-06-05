@@ -20,8 +20,9 @@
         <autoComplete
           :url="this.$root.server + '/user-autocomplete/'"
           anchor="username"
-          placeholder="username"
+          placeholder="Search"
           class-name="inputText inputSearch"
+          :onSelect="selectName"
           id="searchBarText">
         </autoComplete>
 
@@ -193,6 +194,9 @@ export default{
     });
   },
   methods:{
+    selectName: function(data){
+    	console.log("ici ", data);
+    },
     addContact: function(){
       let username = document.getElementById('searchBarText').value;
 
@@ -362,12 +366,18 @@ export default{
 
   #UserNavbar{
     margin: 0;
-    padding: 0;
-    width: 20%;
-    background-color: #f1f1f1;
+    padding-left: 30px;
+    width: 15%;
+    min-width: 200px;
+    background-color: #555;
     height: 100%;
     overflow: auto;
     float:left;
+    text-align: left;
+  }
+
+  #UserNavbar p, #UserNavbar h3, #UserNavbar h1, #UserNavbar h2, #UserNavbar h4, #UserNavbar a, #UserNavbar button, #UserNavbar span{
+    color: white;
   }
 
   .activeView{
@@ -378,7 +388,8 @@ export default{
   }
 
   #content {
-      width:80%;
+      width:85%;
+      max-width: calc(100% - 200px);
       height:100%;
       background-color: white;
       float:left;
@@ -424,26 +435,26 @@ export default{
   .leftNavbar {
     list-style-type: none;
     margin: 0;
-    padding: 0;
+    padding-left: 20px;
     width: 100%;
     position: relative;
   }
 
   li a {
     display: block;
-    color: #000;
+    color: #000 !important;
     padding: 8px 16px;
     text-decoration: none;
   }
 
   li a.active {
     background-color: #4CAF50;
-    color: white;
+    color: white !important;
   }
 
   li a:hover:not(.active) {
     background-color: #555;
-    color: white;
+    color: white !important;
   }
 
 </style>

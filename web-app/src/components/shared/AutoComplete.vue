@@ -17,13 +17,13 @@
         <li v-for="(data, i) in json"
             transition="showAll"
             :class="activeClass(i)">
-
-          <a  href="#"
-              @click.prevent="selectList(data)"
-              @mousemove="mousemove(i)">
-            <b>{{ data[anchor] }}</b>
-          </a>
-
+          <div>
+            <a  href="#"
+                @click.prevent="selectList(data)"
+                @mousemove="mousemove(i)">
+              <b>{{ data[anchor] }}</b>
+            </a>
+          </div>
         </li>
       </ul>
     </div>
@@ -154,7 +154,7 @@
         setTimeout(() => {
           // Callback Event
           this.onHide ? this.onHide() : null
-          this.showList = false;
+          // this.showList = false;
         },250);
       },
       focus(e){
@@ -196,7 +196,8 @@
       },
       activeClass(i){
         return {
-          'focus-list' : i == this.focusList
+          'focus-list' : i == this.focusList,
+          'test': true,
         };
       },
       selectList(data){
@@ -223,7 +224,6 @@
               }else{
               	this.json = JSON.parse(response.data);
               }
-
             });
           }
         }
