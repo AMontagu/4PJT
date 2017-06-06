@@ -30,12 +30,15 @@ urlpatterns = [
     url(r'^useredit/', views.editUser),
     url(r'^creategroup/', views.createGroup),
     url(r'^addusertogroup/', views.addUserToGroup),
+    url(r'^joinchannel/', views.joinChannel),
     url(r'^removegroup/', views.removeGroup),
     url(r'^quitgroup/', views.quitGroup),
     url(r'^checkfriendship/', views.checkFriendship),
     url(r'^giveadminright/', views.giveAdminRight),
     url(r'^banuser/', views.banUser),
     url(r'^changeavatar/', views.changeAvatar),
+    url(r'^postfile/', views.postFile),
+    url(r'^downloadfile/', views.downloadFile),
     url(r'^api-token-auth/', tokenView.obtain_auth_token),
     url(r'^user-autocomplete/$', views.userAutocomplete)
 ]

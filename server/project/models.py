@@ -4,7 +4,8 @@ from django.core.files.storage import FileSystemStorage
 from os import path
 from server.settings import BASE_DIR
 
-fs = FileSystemStorage(location=path.join(BASE_DIR, '../web-app/static/media/avatar'))
+fsAvatar = FileSystemStorage(location=path.join(BASE_DIR, '../web-app/static/media/avatar'))
+fsFile = FileSystemStorage(location=path.join(BASE_DIR, '../web-app/static/media/files'))
 # fs = FileSystemStorage(location=BASE_DIR)
 
 class QwirkGroup(models.Model):
@@ -26,7 +27,7 @@ class QwirkUser(models.Model):
 	contacts = models.ManyToManyField('Contact', blank=True)
 	qwirkGroups = models.ManyToManyField(QwirkGroup, blank=True)
 	status = models.CharField(max_length=10)
-	avatar = models.ImageField(storage=fs, blank=True, null=True)
+	avatar = models.ImageField(storage=fsAvatar, blank=True, null=True)
 
 	def __str__(self):
 		return str(self.user.username)
@@ -48,6 +49,7 @@ class Message(models.Model):
 	text = models.TextField()
 	dateTime = models.DateTimeField(auto_now=True)
 	type = models.TextField()
+	file = models.FileField(storage=fsFile, blank=True, null=True)
 
 
 class Notification(models.Model):

@@ -19,14 +19,13 @@
 
         <autoComplete
           :url="this.$root.server + '/user-autocomplete/'"
-          anchor="username"
-          placeholder="username"
+          anchor="name"
+          placeholder="Search"
           class-name="inputText inputSearch"
+          :onSelect="selectName"
           id="searchBarText">
         </autoComplete>
 
-        <!-- <input type="text" class="inputText inputSearch" placeholder="username" v-model="searchBarText"/> -->
-        <button type="button" class="btn btn-action" v-on:click="addContact">Add</button>
       </div>
       <div class="chatKind">
         <h3>Contacts</h3>
@@ -98,7 +97,7 @@
 
 <script>
 import Modal from '../shared/Modal.vue'
-import {User, QwirkUser, Notification, Contact} from '../../../static/js/model.js';
+import {User, QwirkUser, Notification, Contact, QwirkGroup} from '../../../static/js/model.js';
 import AutoComplete from '../shared/AutoComplete.vue'
 export default{
   name:"UserHome",
@@ -193,9 +192,15 @@ export default{
     });
   },
   methods:{
-    addContact: function(){
-      let username = document.getElementById('searchBarText').value;
-
+    selectName: function(data){
+    	console.log("ici ", data);
+    	if(data.type === 'user'){
+    		this.addContact(data.name);
+      }else if(data.type === 'channel'){
+    		this.addUserToChannel(data.name);
+      }
+    },
+    addContact: function(username){
       this.$http.post(this.$root.server + '/addcontact/', {'username': username}).then((response) => {
 
       	console.log("sucess add contact", response.data);
@@ -224,6 +229,27 @@ export default{
         console.log("error :", err);
       });
     },
+    addUserToChannel: function(channelName){
+      this.$http.post(this.$root.server + '/joinchannel/', {channelName: channelName, username: this.$root.qwirkUser.user.username}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+        console.log("sucess request add user to channels", response);
+        let data = response.body;
+
+        if(typeof data === 'string'){
+          data = JSON.parse(data);
+        }
+
+        console.log(data);
+        if(data.status === "success"){
+        	let qwirkGroup = new QwirkGroup();
+        	qwirkGroup.copyConstructor(data.qwirkGroup);
+        	this.$root.qwirkUser.qwirkGroups.push(qwirkGroup);
+          this.$router.push('/user/' + channelName)
+        }else{
+        	console.error("error join channel");
+          //display error modal
+        }
+      })
+    },
     logOut: function(){
       this.$cookie.delete('token');
       //console.log(this.$cookie.get('token'))
@@ -245,13 +271,19 @@ export default{
     createGroup: function(){
       // TODO check if name exist
       let data = {groupName: this.groupName, isPrivate: this.createPrivateGroup};
+      console.log(data);
       this.$http.post('http://localhost:8000/creategroup/', data, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
 
       	console.log("sucess create group", response);
+      	let qwirkGroup = new QwirkGroup();
+      	qwirkGroup.copyConstructor(response.body);
+
+        this.$root.qwirkUser.qwirkGroups.push(qwirkGroup);
+
         // TODO display message that said your modifications was good taken
         this.currentGroupName = this.groupName;
         this.showModal = false;
-        this.$router.push(this.currentGroupName);
+        this.$router.push('/user/' + this.currentGroupName);
         this.groupName = '';
 
       }, function(err){
@@ -268,6 +300,7 @@ export default{
 
             let txt = document.createTextNode("1");
             el.innerText = txt.textContent;
+            el.classList.add('active');
 
           } else {
 
@@ -286,6 +319,7 @@ export default{
 
                   let txt = document.createTextNode("1");
                   els[i].innerText = txt.textContent;
+                  els[i].classList.add('active');
 
                 } else {
 
@@ -329,6 +363,7 @@ export default{
 
           let txt = document.createTextNode("");
           el.innerText = txt.textContent;
+          el.classList.remove("active");
         }
       }
       next();
@@ -362,12 +397,18 @@ export default{
 
   #UserNavbar{
     margin: 0;
-    padding: 0;
-    width: 20%;
-    background-color: #f1f1f1;
+    padding-left: 30px;
+    width: 15%;
+    min-width: 200px;
+    background-color: #555;
     height: 100%;
     overflow: auto;
     float:left;
+    text-align: left;
+  }
+
+  #UserNavbar p, #UserNavbar h3, #UserNavbar h1, #UserNavbar h2, #UserNavbar h4, #UserNavbar a, #UserNavbar button, #UserNavbar span{
+    color: white;
   }
 
   .activeView{
@@ -378,7 +419,8 @@ export default{
   }
 
   #content {
-      width:80%;
+      width:85%;
+      max-width: calc(100% - 200px);
       height:100%;
       background-color: white;
       float:left;
@@ -409,6 +451,11 @@ export default{
 
   .chatKind{
     width:100%;
+  }
+
+  .chatKind a{
+    font-size: 18px;
+    line-height: 30px;
 
   }
 
@@ -424,26 +471,42 @@ export default{
   .leftNavbar {
     list-style-type: none;
     margin: 0;
-    padding: 0;
+    padding-left: 20px;
     width: 100%;
     position: relative;
   }
 
   li a {
     display: block;
-    color: #000;
+    color: #000 !important;
     padding: 8px 16px;
     text-decoration: none;
   }
 
   li a.active {
     background-color: #4CAF50;
-    color: white;
+    color: white !important;
   }
 
   li a:hover:not(.active) {
     background-color: #555;
-    color: white;
+    color: white !important;
+  }
+
+  .notification{
+    width: 25px;
+    height: 25px;
+    margin-left: 10px;
+    font-size: 16px;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 25px;
+  }
+
+  .notification.active{
+    background-color: red;
+    border-radius: 50%;
   }
 
 </style>

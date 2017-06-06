@@ -69,6 +69,7 @@ def checkGroup(url, token):
 			userIsBanned = False
 
 			if token.user.qwirkuser in QwirkGroup.objects.get(name=groupName).blockedUsers.all():
+				print("user is banned")
 				userIsBanned = True
 
 			if contactRelationExist or (userIsInGroup and not userIsBanned):
@@ -123,7 +124,7 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 				qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"])  # TODO check with exist or with try catch but not sur because check in connect need to be tested
 
 				if content["action"] == "message":
-					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"], type="message")
+					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"], type=content["content"]["type"])
 					message.save()
 
 					messageSerialized = MessageSerializer(message)
@@ -174,7 +175,6 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 				elif content["action"] == "get-message":
 
 					try:
-						# TODO MAYBE THINK ABOUT USING message_qwirkGroup for cleaning all the notification
 						Notification.objects.filter(message__qwirkGroup__name=kwargs["groupname"],
 																	qwirkUser=user.qwirkuser).delete()
 					except Notification.DoesNotExist:

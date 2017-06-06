@@ -52,7 +52,17 @@ class QwirkGroup {
     this.name = "";
     this.private = true;
     this.isContactGroup = true;
-    this.admin = []
+    this.admins = []
+  }
+
+  copyConstructor(object) {
+    if (typeof object === "string") {
+      object = JSON.parse(object);
+    }
+    this.name = object.name;
+    this.private = object.private;
+    this.isContactGroup = object.isContactGroup;
+    this.admins = object.admins;
   }
 }
 

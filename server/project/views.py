@@ -1,14 +1,18 @@
+import mimetypes
 from datetime import datetime
 from importlib import import_module
+from wsgiref.util import FileWrapper
 
 from channels import Group
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.shortcuts import render
 
 from django.contrib.auth import authenticate, login, logout
 from django.utils.timezone import utc
+from os import path
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, renderer_classes, \
@@ -19,10 +23,12 @@ from rest_framework.renderers import JSONRenderer
 
 from project.models import QwirkUser, Contact, QwirkGroup, Notification, Message
 from project.serializer import QwirkUserSerializer, QwirkUserSerializerSimple, QwirkGroupSerializer, \
-	NotificationSerializer, ContactSerializer, NotificationSerializerSimple
+	NotificationSerializer, ContactSerializer, NotificationSerializerSimple, MessageSerializer
 from server import settings
 from server.customLogging import *
 import json
+
+from django.utils.encoding import smart_str
 
 
 @api_view(['POST'])
@@ -251,6 +257,7 @@ def getSimpleUserInformations(request):
 
 
 @api_view(['POST'])
+@renderer_classes((JSONRenderer,))
 def createGroup(request):
 	if request.user is not None:
 		groupName = request.data['groupName']
@@ -262,7 +269,11 @@ def createGroup(request):
 
 		request.user.qwirkuser.qwirkGroups.add(qwirkGroup)
 
-		return HttpResponse(status=201)
+		serializer = QwirkGroupSerializer(qwirkGroup)
+
+		jsonResponse = JSONRenderer().render(serializer.data)
+
+		return HttpResponse(jsonResponse, status=201)
 	else:
 		return HttpResponse(status=401)
 
@@ -283,15 +294,19 @@ def quitGroup(request):
 	if request.user is not None:
 		groupName = request.data['groupName']
 
-		qwirkGroup = QwirkGroup.objects.filter(name=groupName)
+		qwirkGroup = QwirkGroup.objects.get(name=groupName)
 		request.user.qwirkuser.qwirkGroups.remove(qwirkGroup)
 
-		if request.user.qwirkuser in qwirkGroup.admins:
+		if request.user.qwirkuser in qwirkGroup.admins.all():
 			qwirkGroup.admins.remove(request.user.qwirkuser)
 			if len(qwirkGroup.admins.all()) <= 0:
-				qwirkUserDefaultAdmin = QwirkUser.objects.filter(qwirkGroup=qwirkGroup).latest()
-				qwirkGroup.admins.add(qwirkUserDefaultAdmin)
-				# TODO Notification and message
+				# qwirkUserDefaultAdmin = QwirkUser.objects.filter(qwirkGroup=qwirkGroup).latest()
+				try:
+					qwirkUserDefaultAdmin = qwirkGroup.qwirkuser_set.earliest('id')
+					qwirkGroup.admins.add(qwirkUserDefaultAdmin)
+					# TODO Notification and message
+				except ObjectDoesNotExist:
+					qwirkGroup.delete()
 
 		# TODO Notification of leaving
 
@@ -326,6 +341,33 @@ def addUserToGroup(request):
 		else:
 			print("user not authorized to add someone")
 			jsonResponse = JSONRenderer().render({'status': 'error', 'text': 'You need to be admin for add an user to the group'})
+			return HttpResponse(jsonResponse, status=403)
+	else:
+		return HttpResponse(status=401)
+
+
+@api_view(['POST'])
+@renderer_classes((JSONRenderer,))
+def joinChannel(request):
+	if request.user is not None:
+		print(request.data)
+		channelName = request.data['channelName']
+		userName = request.data['username']
+
+		qwirkGroup = QwirkGroup.objects.get(name=channelName)
+		userToAdd = User.objects.get(username=userName)
+
+		if userToAdd.qwirkuser not in qwirkGroup.blockedUsers.all():
+			userToAdd.qwirkuser.qwirkGroups.add(qwirkGroup)
+
+			serializer = QwirkGroupSerializer(qwirkGroup)
+
+			jsonResponse = JSONRenderer().render({'status': 'success', 'qwirkGroup': serializer.data})
+			return HttpResponse(jsonResponse, status=200)
+		else:
+			print("user blocked")
+			jsonResponse = JSONRenderer().render(
+				{'status': 'error', 'text': 'This user is bocked for this group'})
 			return HttpResponse(jsonResponse, status=403)
 	else:
 		return HttpResponse(status=401)
@@ -407,40 +449,53 @@ def userAutocomplete(request):
 		jsonResponse = JSONRenderer().render({"error": "authorization fail"})
 		return HttpResponse(jsonResponse, status=401)
 
-	qs = User.objects.all()
+	users = User.objects.all()
+	channels = QwirkGroup.objects.filter(isPrivate=False)
 
-	userSerialized = dict()
+
+	result = dict()
 
 	if q:
-		qsStart = qs.filter(username__istartswith=q)
-		qsSearch = qs.filter(username__icontains=q)
+		usersStart = users.filter(username__istartswith=q)
+		usersSearch = users.filter(username__icontains=q)
+
+
+		channelsStart = channels.filter(name__istartswith=q)
+		channelsSearch = channels.filter(name__icontains=q)
 
 		# print(qsSearch)
 
-		for result in qsStart:
+		for user in usersStart:
 			# print(result)
-			userSerialized[result.username] = dict()
-			userSerialized[result.username]["username"] = result.username
+			result[user.username] = { "name": user.username, "type": "user"}
 
-		for result in qsSearch:
+		for user in usersSearch:
 			# print(result)
-			userSerialized[result.username] = dict()
-			userSerialized[result.username]["username"] = result.username
+			result[user.username] = { "name": user.username, "type": "user"}
+
+		for channel in channelsStart:
+			# print(result)
+			result[channel.name] = { "name": channel.name, "type": "channel"}
+
+		for channel in channelsSearch:
+			# print(result)
+			result[channel.name] = { "name": channel.name, "type": "channel"}
+
 	else:
-		for result in qs:
-			userSerialized[result.username] = dict()
-			userSerialized[result.username]["username"] = result.username
+		for user in users:
+			result[user.username] = { "name": user.username, "type": "user"}
 
-	jsonResponse = JSONRenderer().render(userSerialized)
+		for channel in channels:
+			result[channel.name] = { "name": channel.name, "type": "channel"}
+
+	jsonResponse = JSONRenderer().render(result)
 	print(jsonResponse)
 	return HttpResponse(jsonResponse, status=200)
 
 
 @api_view(['POST'])
-#@parser_classes((FileUploadParser,))
 def changeAvatar(request):
 	if request.user is not None:
-		print(request.FILES['file'])
 
 		avatar = request.FILES['file']
 
@@ -451,3 +506,82 @@ def changeAvatar(request):
 		return HttpResponse(jsonResponse, status=200)
 	else:
 		return HttpResponse(status=401)
+
+
+@api_view(['POST'])
+def postFile(request):
+	if request.user is not None:
+		file = request.FILES['file']
+		groupName = request.data['groupName']
+		type = request.data['type']
+
+		qwirkGroup = QwirkGroup.objects.get(name=groupName)
+
+		#TODO security
+		#if request.user.qwirkuser in qwirkGroup.qwirkuser_set.all() or request.user.qwirkuser in qwirkGroup.contact_set.all():
+
+		message = Message(qwirkUser=request.user.qwirkuser, qwirkGroup=qwirkGroup, text=request.user.username + " upload a file", dateTime=datetime.now(), type=type)
+		message.file.save(file.name, file)
+		message.save()
+
+		messageSerialized = MessageSerializer(message)
+
+		text = json.dumps({
+			"action": "new-message",
+			"content": json.dumps(messageSerialized.data)
+		})
+		Group(groupName).send({
+			"text": text,
+		})
+
+		if qwirkGroup.isContactGroup:
+			for contact in qwirkGroup.contact_set.all():
+				print(contact.qwirkUser)
+				if contact.qwirkUser != request.user.qwirkuser:
+					notification = Notification.objects.create(message=message, qwirkUser=contact.qwirkUser)
+					notification.save()
+					serializer = NotificationSerializerSimple(notification)
+					text = json.dumps({
+						"action": "notification",
+						"notification": serializer.data
+					})
+					Group("user" + contact.qwirkUser.user.username).send({
+						"text": text,
+					})
+		else:
+			for qwirkUser in qwirkGroup.qwirkuser_set.all():
+				print(qwirkUser)
+				if qwirkUser != request.user.qwirkuser:
+					notification = Notification.objects.create(message=message, qwirkUser=qwirkUser)
+					notification.save()
+					serializer = NotificationSerializerSimple(notification)
+					text = json.dumps({
+						"action": "notification",
+						"notification": serializer.data
+					})
+					Group("user" + qwirkUser.user.username).send({
+						"text": text,
+					})
+		return HttpResponse(status=200)
+		#else:
+		#	return HttpResponse(status=403)
+	else:
+		return HttpResponse(status=401)
+
+
+def downloadFile(request):
+
+	fileName = request.GET.get('fileName', "")
+	pathToFile = path.join(settings.BASE_DIR, '../web-app/static/media/files/' + fileName)
+
+	wrapper = FileWrapper(open(pathToFile, "rb"))
+	content_type = mimetypes.guess_type(pathToFile)[0]
+
+	print(content_type)
+
+	response = HttpResponse(wrapper, content_type=content_type)
+	response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(fileName)
+	#response['Content-Length']      = path.getsize(pathToFile)
+	#response['X-Sendfile'] = smart_str(pathToFile)
+
+	return response

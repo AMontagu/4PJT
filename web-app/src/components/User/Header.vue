@@ -18,9 +18,8 @@
         </div>
       </div>
       <div class="rightHeader">
-        <span v-if="!inCall" class="glyphicon glyphicon glyphicon-earphone qwirkHeaderIcon" aria-hidden="true" v-on:click="emitCallWebRTC()"></span>
-        <span v-if="!groupInformations.isContactGroup" class="glyphicon glyphicon-plus qwirkHeaderIcon" aria-hidden="true" v-on:click="showAddUser()"></span>
-        <div class="btn-group">
+
+        <div class="btn-group rightHeaderElement">
           <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><span class="glyphicon glyphicon-cog qwirkHeaderIcon" aria-hidden="true"></span></button>
           <ul v-if="!groupInformations.isContactGroup" class="dropdown-menu" style="left: -125px;">
             <li><a v-on:click="quitGroup()">Leave {{groupInformations.titleGroupName}}</a></li>
@@ -31,6 +30,15 @@
             <li><a v-on:click="removeGroup()">Remove relationship</a></li>
           </ul>
         </div>
+
+        <div v-if="!groupInformations.isContactGroup" class="rightHeaderElement">
+          <span class="glyphicon glyphicon-plus qwirkHeaderIcon" aria-hidden="true" v-on:click="showAddUser()"></span>
+        </div>
+
+        <div v-if="!inCall" class="rightHeaderElement">
+          <span class="glyphicon glyphicon glyphicon-earphone qwirkHeaderIcon" aria-hidden="true" v-on:click="emitCallWebRTC()"></span>
+        </div>
+
       </div>
     </div>
 
@@ -186,7 +194,7 @@ export default{
         });
       },
       quitGroup: function(){
-        this.$http.post(this.$root.server + '/quitGroup/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+        this.$http.post(this.$root.server + '/quitgroup/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
           console.log("successfully quitted ", this.currentGroupName);
           this.$router.go('/user/');
         });
@@ -301,6 +309,12 @@ export default{
     text-align: right;
     padding-right: 20px;
     float: right;
+  }
+
+  .rightHeaderElement{
+    float: right;
+    margin-top: 10px;
+    margin-left: 20px;
   }
 
   .leftHeader h4{

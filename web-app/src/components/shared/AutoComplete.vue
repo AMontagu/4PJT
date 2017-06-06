@@ -14,17 +14,31 @@
 
     <div :class="(className ? className + '-list ' : '') + 'autocomplete transition autocomplete-list'" v-show="showList">
       <ul style="z-index:99">
+
+        <li role="separator" class="divider">users</li>
         <li v-for="(data, i) in json"
+            v-if="data.type == 'user'"
             transition="showAll"
             :class="activeClass(i)">
-
           <a  href="#"
               @click.prevent="selectList(data)"
               @mousemove="mousemove(i)">
             <b>{{ data[anchor] }}</b>
           </a>
-
         </li>
+
+        <li role="separator" class="divider">channels</li>
+        <li v-for="(data, i) in json"
+            v-if="data.type == 'channel'"
+            transition="showAll"
+            :class="activeClass(i)">
+          <a  href="#"
+              @click.prevent="selectList(data)"
+              @mousemove="mousemove(i)">
+            <b>{{ data[anchor] }}</b>
+          </a>
+        </li>
+
       </ul>
     </div>
   </div>
@@ -196,7 +210,8 @@
       },
       activeClass(i){
         return {
-          'focus-list' : i == this.focusList
+          'focus-list' : i == this.focusList,
+          'test': true,
         };
       },
       selectList(data){
@@ -223,7 +238,6 @@
               }else{
               	this.json = JSON.parse(response.data);
               }
-
             });
           }
         }
