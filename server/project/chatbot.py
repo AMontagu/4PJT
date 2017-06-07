@@ -1,81 +1,68 @@
 import json
 
 from channels import Group
+
+from project import utils
 from project.models import QwirkUser, QwirkGroup, Notification, Message
 from project.serializer import MessageSerializer, NotificationSerializerSimple
 
 
 def sendSomething(qwirkGroup, user, *args):
 	if len(args) > 0:
-		message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=str(args[0]),
-										 type="botResponse")
-		message.save()
-
-		messageSerialized = MessageSerializer(message)
-
-		text = json.dumps({
-			"action": "new-message",
-			"content": json.dumps(messageSerialized.data)
-		})
-		Group(qwirkGroup.name).send({
-			"text": text,
-		})
-
-		if qwirkGroup.isContactGroup:
-			for contact in qwirkGroup.contact_set.all():
-				print(contact.qwirkUser)
-				if contact.qwirkUser != user.qwirkuser:
-					notification = Notification.objects.create(message=message, qwirkUser=contact.qwirkUser)
-					notification.save()
-					serializer = NotificationSerializerSimple(notification)
-					text = json.dumps({
-						"action": "notification",
-						"notification": serializer.data
-					})
-					Group("user" + contact.qwirkUser.user.username).send({
-						"text": text,
-					})
-		else:
-			for qwirkUser in qwirkGroup.qwirkuser_set.all():
-				print(qwirkUser)
-				if qwirkUser != user.qwirkuser:
-					notification = Notification.objects.create(message=message, qwirkUser=qwirkUser)
-					notification.save()
-					serializer = NotificationSerializerSimple(notification)
-					text = json.dumps({
-						"action": "notification",
-						"notification": serializer.data
-					})
-					Group("user" + qwirkUser.user.username).send({
-						"text": text,
-					})
+		utils.sendMessageToAllUserGroup(qwirkGroup, user, args[0], "botResponse")
 
 
 def sayHello(qwirkGroup, user, *args):
 	sendSomething(qwirkGroup, user, "Hello !")
 
 
-def kickUser(qwirkGroup, user, *args):
-	if len(args) > 0:
-		if user.qwirkuser in qwirkGroup.admins:
+def kickUser(qwirkGroup, user, parameters):
+	if len(parameters) > 0:
+		print(parameters[0])
+		if user.qwirkuser in qwirkGroup.admins.all():
 			try:
-				qwirkUserToKick = QwirkUser.objects.get(user__username=args[0])
+				qwirkUserToKick = QwirkUser.objects.get(user__username=parameters[0])
 				qwirkUserToKick.qwirkGroups.remove(qwirkGroup)
-				sendSomething(qwirkGroup, user, "User " + str(args[0]) + " has been kicked")
+				sendSomething(qwirkGroup, user, "User " + str(parameters[0]) + " has been kicked")
+
+
+				utils.sendMessageToAllUserGroup(qwirkGroup, user,
+												parameters[0] + " has been kicked by " + user.username, "informations")
+
+				textUserLeave = json.dumps({
+					"action": "userLeave",
+					"username": user.username
+				})
+				utils.sendToQwirkGroup(qwirkGroup, user, textUserLeave)
+
 			except QwirkUser.DoesNotExist:
 				sendSomething(qwirkGroup, user, "User not in group")
+		else:
+			sendSomething(qwirkGroup, user, "You are not an admin you can't do that !")
 
 
-def banUser(qwirkGroup, user, *args):
-	if len(args) > 0:
-		if user.qwirkuser in qwirkGroup.admins:
+def banUser(qwirkGroup, user, parameters):
+	if len(parameters) > 0:
+		if user.qwirkuser in qwirkGroup.admins.all():
 			try:
-				qwirkUserToBan = QwirkUser.objects.get(user__username=args[0])
+				qwirkUserToBan = QwirkUser.objects.get(user__username=parameters[0])
 				qwirkUserToBan.qwirkGroups.remove(qwirkGroup)
 				qwirkGroup.blockedUsers.add(qwirkUserToBan)
-				sendSomething(qwirkGroup, user, "User " + str(args[0]) + " has been kicked")
+				sendSomething(qwirkGroup, user, "User " + str(parameters[0]) + " has been kicked")
+
+				utils.sendMessageToAllUserGroup(qwirkGroup, user,
+												parameters[0] + " has been banned by " + user.username, "informations")
+
+				textUserLeave = json.dumps({
+					"action": "userLeave",
+					"username": user.username
+				})
+				utils.sendToQwirkGroup(qwirkGroup, user, textUserLeave)
+
 			except QwirkUser.DoesNotExist:
 				sendSomething(qwirkGroup, user, "User not in group")
+		else:
+			sendSomething(qwirkGroup, user, "You are not an admin you can't do that !")
 
 
 

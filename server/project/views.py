@@ -317,14 +317,14 @@ def quitGroup(request):
 				try:
 					qwirkUserDefaultAdmin = qwirkGroup.qwirkuser_set.earliest('id')
 					qwirkGroup.admins.add(qwirkUserDefaultAdmin)
-					utils.sendMessageToGroup(qwirkGroup, request.user, "new administrator: " + qwirkUserDefaultAdmin.user.username, "informations")
+					utils.sendMessageToAllUserGroup(qwirkGroup, request.user, "new administrator: " + qwirkUserDefaultAdmin.user.username, "informations")
 				except ObjectDoesNotExist:
 					qwirkGroup.delete()
 
 		groupOrChannel = "channel"
 		if qwirkGroup.isPrivate:
 			groupOrChannel = "group"
-		utils.sendMessageToGroup(qwirkGroup, request.user, request.user.username + "leave this " + groupOrChannel, "informations")
+		utils.sendMessageToAllUserGroup(qwirkGroup, request.user, request.user.username + " leave this " + groupOrChannel, "informations")
 
 		textUserLeave = json.dumps({
 			"action": "userLeave",
@@ -373,7 +373,7 @@ def addUserToGroup(request):
 
 					textMessage = request.user.username + " has invited " + userToAdd.username + " to join the " + groupOrChannel
 
-					utils.sendMessageToGroup(qwirkGroup, request.user, textMessage, "informations")
+					utils.sendMessageToAllUserGroup(qwirkGroup, request.user, textMessage, "informations")
 
 					qwirkUserSerializer = QwirkUserSerializer(userToAdd.qwirkuser)
 
@@ -513,6 +513,9 @@ def kickUser(request):
 				"text": text,
 			})
 
+			utils.sendMessageToAllUserGroup(qwirkGroup, request.user,
+											userToKickUsername + " has been kicked by " + request.user.username, "informations")
+
 			return HttpResponse(status=200)
 		else:
 			jsonResponse = JSONRenderer().render({'status': 'error', 'name': "NoAdminRight", 'message': 'You need to be admin for kick user'})
@@ -542,6 +545,10 @@ def banUser(request):
 			Group("user" + userToBanUsername).send({
 				"text": text,
 			})
+
+
+			utils.sendMessageToAllUserGroup(qwirkGroup, request.user,
+											userToBanUsername + " has been banned by " + request.user.username, "informations")
 
 			return HttpResponse(status=200)
 		else:

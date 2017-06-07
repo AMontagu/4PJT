@@ -7,9 +7,6 @@ from project.serializer import MessageSerializer, NotificationSerializerSimple, 
 
 
 def sendToQwirkGroup(qwirkGroup, currentUser, element):
-	print(currentUser.qwirkuser in qwirkGroup.qwirkuser_set.all())
-	print(qwirkGroup.qwirkuser_set.all())
-	print(currentUser.qwirkuser not in qwirkGroup.blockedUsers.all())
 	if currentUser.qwirkuser in qwirkGroup.qwirkuser_set.all() and currentUser.qwirkuser not in qwirkGroup.blockedUsers.all():
 		Group(qwirkGroup.name).send({
 			"text": element,
@@ -54,8 +51,8 @@ def sendFriendshipResponse(qwirkGroup, currentUser, friendShipResponse, message)
 				"text": text,
 			})
 
-def sendMessageToGroup(qwirkGroup, currentUser, text, type):
-	message = Message.objects.create(qwirkUser=currentUser.qwirkuser, qwirkGroup=qwirkGroup, text=text, type=type)
+def sendMessageToAllUserGroup(qwirkGroup, currentUser, text, type):
+	message = Message.objects.create(qwirkUser=currentUser.qwirkuser, qwirkGroup=qwirkGroup, text=str(text), type=type)
 	message.save()
 
 	messageSerialized = MessageSerializer(message)
@@ -100,7 +97,7 @@ def sendMessageToGroup(qwirkGroup, currentUser, text, type):
 
 def sendMessageToContact(contact, qwirkGroup, currentUser, text, type):
 	message = Message.objects.create(qwirkUser=currentUser.qwirkuser, qwirkGroup=qwirkGroup,
-									 text=text, type=type)
+									 text=str(text), type=type)
 	message.save()
 
 	notification = Notification.objects.create(message=message, qwirkUser=contact.qwirkuser)

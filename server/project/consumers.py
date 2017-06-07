@@ -127,7 +127,7 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 
 				if content["action"] == "message":
 
-					utils.sendMessageToGroup(qwirkGroup, user, content["content"]["text"], "message")
+					utils.sendMessageToAllUserGroup(qwirkGroup, user, content["content"]["text"], "message")
 
 					self.chatbot(qwirkGroup, user, text=content["content"]["text"])
 
@@ -235,7 +235,7 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 
 						textMessage = user.username + " has blocked " + userToBlock.user.username
 
-						utils.sendMessageToGroup(qwirkGroup, user, textMessage, "informations")
+						utils.sendMessageToAllUserGroup(qwirkGroup, user, textMessage, "informations")
 
 		else:
 			print("no groupname in url")
@@ -262,13 +262,11 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 				actionSplit = textSplit[indexSplit].split()
 
 				for action in botActions:
-					print("actionSplit[0] = " + actionSplit[0])
-					print("action['action'] = " + action["action"])
 					if actionSplit[0] == action["action"]:
 						parameters = list()
-						for j in range(0, action["parameters"]):
+						for j in range(1, action["parameters"] + 1):
 							parameters.append(actionSplit[j])
-						action["function"](qwirkGroup, user)
+						action["function"](qwirkGroup, user, parameters)
 				indexSplit += 1
 
 
