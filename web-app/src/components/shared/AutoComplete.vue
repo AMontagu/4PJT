@@ -13,7 +13,7 @@
             autocomplete="off" />
 
     <div :class="(className ? className + '-list ' : '') + 'autocomplete transition autocomplete-list'" v-show="showList">
-      <ul style="z-index:99">
+      <ul class="listResult">
 
         <li role="separator" class="divider">users</li>
         <li v-for="(data, i) in json"
@@ -27,9 +27,9 @@
           </a>
         </li>
 
-        <li role="separator" class="divider">channels</li>
+        <li v-if="multiple" role="separator" class="divider">channels</li>
         <li v-for="(data, i) in json"
-            v-if="data.type == 'channel'"
+            v-if="data.type == 'channel' && multiple"
             transition="showAll"
             :class="activeClass(i)">
           <a  href="#"
@@ -105,6 +105,8 @@
       },
       // Custom Params
       customParams: Object,
+      // Multiple kind of data
+      multiple: false,
       // minimum length
       min: {
         type: Number,
@@ -252,3 +254,98 @@
     }
   }
 </script>
+
+<style>
+
+  /*
+
+AUTOCOMPLETE CSS
+
+ */
+
+
+  .transition, .autocomplete, .showAll-transition, .autocomplete ul, .autocomplete ul li a{
+    transition:all 0.3s ease-out;
+    -moz-transition:all 0.3s ease-out;
+    -webkit-transition:all 0.3s ease-out;
+    -o-transition:all 0.3s ease-out;
+  }
+
+  .autocomplete ul{
+    font-family: sans-serif;
+    position: absolute;
+    list-style: none;
+    background: #f8f8f8;
+    padding: 10px 0;
+    display: inline-block;
+    min-width: 150px;
+    margin-top: 10px;
+    width: 150px;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    z-index: 99;
+  }
+
+  .autocomplete ul:before{
+    content: "";
+    display: block;
+    position: absolute;
+    height: 0;
+    width: 0;
+    border: 10px solid transparent;
+    border-bottom: 10px solid #f8f8f8;
+    left: 46%;
+    top: -20px
+  }
+
+  .autocomplete ul li a{
+    text-decoration: none;
+    display: block;
+    background: #f8f8f8;
+    color: #2b2b2b;
+    padding: 5px;
+    padding-left: 10px;
+  }
+
+  .autocomplete ul li a:hover, .autocomplete ul li.focus-list a{
+    color: white;
+    background: #555;
+  }
+
+  .autocomplete ul li a span{
+    display: block;
+    margin-top: 3px;
+    color: grey;
+    font-size: 13px;
+  }
+
+  .autocomplete ul li a:hover span, .autocomplete ul li.focus-list a span{
+    color: white;
+  }
+
+  .showAll-transition{
+    opacity: 1;
+    height: 50px;
+    overflow: hidden;
+  }
+
+  .showAll-enter{
+    opacity: 0.3;
+    height: 0;
+  }
+
+  .showAll-leave{
+    display: none;
+  }
+
+  .inputText input{
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    -webkit-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+  }
+</style>

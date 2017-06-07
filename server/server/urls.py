@@ -35,10 +35,13 @@ urlpatterns = [
     url(r'^quitgroup/', views.quitGroup),
     url(r'^checkfriendship/', views.checkFriendship),
     url(r'^giveadminright/', views.giveAdminRight),
+	url(r'^blockuser/', views.blockUser),
+    url(r'^kickuser/', views.kickUser),
     url(r'^banuser/', views.banUser),
     url(r'^changeavatar/', views.changeAvatar),
     url(r'^postfile/', views.postFile),
     url(r'^downloadfile/', views.downloadFile),
     url(r'^api-token-auth/', tokenView.obtain_auth_token),
+    url(r'^userchannel-autocomplete/$', views.userChannelAutocomplete),
     url(r'^user-autocomplete/$', views.userAutocomplete)
 ]

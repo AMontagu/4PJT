@@ -111,6 +111,18 @@
 
           </div>
 
+          <div v-if="message.type == 'acceptMessage' && groupInformations.qwirkUsers.length > 0">
+            <h3> You and {{ groupInformations.qwirkUsers[0].user.username }} are now friends</h3>
+          </div>
+
+          <div v-if="message.type == 'refuseMessage'">
+            <h3>The demand has been refused</h3>
+          </div>
+
+          <div v-if="message.type == 'blockMessage'">
+            <h3>The relationship is blocked</h3>
+          </div>
+
           <div v-if="message.type == 'fileMessage'">
 
             <div class="containerFile">
@@ -132,6 +144,32 @@
             </div>
 
           </div>
+
+          <div v-if="message.type == 'botResponse'">
+
+            <div class="pictureUser">
+              <img src="/static/media/bot.png">
+            </div>
+            <div class="messageContent">
+              <div class="messageUserName">
+                <p>ChatBot <span class="messageTime">{{message.dateTime | hours}}</span></p>
+              </div>
+              <div class="messageText">
+                <p v-for="line in getLines(message.text)" class="containLine">
+                  <span v-for="element in getElementsInMessage(line)" v-if="element.type == 'text'" v-html="element.message" class="spanLine"></span>
+                  <emoji :emoji="element.emoji.colons" v-else></emoji>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="message.type == 'informations'">
+              <p v-for="line in getLines(message.text)" class="containLine italic">
+                <span v-for="element in getElementsInMessage(line)" v-if="element.type == 'text'" v-html="element.message" class="spanLine"></span>
+                <emoji :emoji="element.emoji.colons" v-else></emoji>
+              </p>
+          </div>
+
         </div>
       </div>
 
@@ -325,7 +363,7 @@
       },
       socketError: function (err) {
         console.log("ERROR : ", err);
-        window.location.href = "/user";
+        window.location.href = "/user/";
       },
       socketMessage: function (message) {
         let data = JSON.parse(message.data);
@@ -346,6 +384,36 @@
           }, 300);
 
           this.messageRecupered = this.messages.length;
+
+        } else if (data.action === "newUser") {
+          //console.log(data.content);
+
+          let qwirkUser = new QwirkUser();
+          qwirkUser.copyConstructor(data.qwirkUser);
+
+          this.groupInformations.qwirkUsers.push(qwirkUser);
+
+          console.log(this.groupInformations.qwirkUsers);
+
+        } else if (data.action === "userLeave") {
+          //console.log(data.content);
+
+          let index = -1;
+
+          this.groupInformations.qwirkUsers.forEach((qwirkUser, i) => {
+          	if(qwirkUser.user.username === data.username){
+              this.groupInformations.qwirkUsers.splice(i, 1);
+            }
+          });
+
+        } else if (data.action === "friendShipResponse") {
+          console.log(data.friendShipResponse);
+
+          this.messages.forEach((message) => {
+          	if(message.type === "requestMessage"){
+          		message.type = data.friendShipResponse;
+            }
+          })
 
         } else if (data.action === "group-informations") {
           //console.log(data.content)
@@ -960,6 +1028,10 @@
     -ms-user-select: text;
     user-select: text;
     word-wrap: break-word;
+  }
+
+  .italic{
+    font-style: italic;
   }
 
   /*////// icons CSS start ////////////////////////*/

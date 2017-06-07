@@ -18,10 +18,11 @@
       <div id="searchPart">
 
         <autoComplete
-          :url="this.$root.server + '/user-autocomplete/'"
+          :url="this.$root.server + '/userchannel-autocomplete/'"
           anchor="name"
           placeholder="Search"
           class-name="inputText inputSearch"
+          :multiple="true"
           :onSelect="selectName"
           id="searchBarText">
         </autoComplete>
@@ -91,19 +92,35 @@
         </button>
       </div>
     </modal>
+
+    <modal v-if="showModalError" @close="showModalError = false">
+      <h3 slot="header">Error {{error.name}}</h3>
+      <div slot="body">
+        <p class="errorMessage">{{error.message}}</p>
+      </div>
+
+
+      <div slot="footer">
+        <button class="modal-default-button" @click="showModalError = false">
+          Close
+        </button>
+      </div>
+    </modal>
   </div>
 </template>
 
 
 <script>
 import Modal from '../shared/Modal.vue'
-import {User, QwirkUser, Notification, Contact, QwirkGroup} from '../../../static/js/model.js';
+import {User, QwirkUser, Notification, Contact, QwirkGroup, Error} from '../../../static/js/model.js';
 import AutoComplete from '../shared/AutoComplete.vue'
 export default{
   name:"UserHome",
   data(){
     return{
       showModal: false,
+      showModalError: false,
+      error: new Error(),
       modalHeader: "",
       createPrivateGroup: true,
       groupName: "",
@@ -159,7 +176,7 @@ export default{
           this.processNotification(notification);
         }
 
-        if(data.action === "newDemand"){
+        else if(data.action === "newDemand"){
 
           console.log("new contact demand", data.contact);
 
@@ -170,12 +187,74 @@ export default{
             this.$root.qwirkUser.contacts.push(contact);
           }
 
-
-
-          let notification = new Notification();
+          /*let notification = new Notification();
           notification.copyConstructor(data.notification);
 
-          this.processNotification(notification);
+          this.processNotification(notification);*/
+        }
+
+        else if(data.action === "newGroup"){
+
+        	let qwirkGroup = new QwirkGroup();
+        	qwirkGroup.copyConstructor(data.qwirkGroup);
+
+          this.$root.qwirkUser.qwirkGroups.push(qwirkGroup);
+
+          if (!this.$root.qwirkUser.existGroup(qwirkGroup)) {
+            this.$root.qwirkUser.qwirkGroups.push(qwirkGroup);
+          }
+
+          /*let notification = new Notification();
+          notification.copyConstructor(data.notification);
+
+          this.processNotification(notification);*/
+        }
+
+        else if(data.action === "removeGroup"){
+        	if(data.isContactGroup === true || data.isContactGroup === 'true' || data.isContactGroup === 'True'){
+        		let index = -1;
+            this.$root.qwirkUser.contacts.forEach((contact, i) => {
+            	if(contact.qwirkGroup.name === data.groupName){
+            		index = i;
+              }
+            });
+
+            if(index !== -1){
+              this.$root.qwirkUser.contacts.splice(index, 1);
+              if(this.currentGroupName === data.groupName){
+              	if(this.$root.qwirkUser.contacts.length > 0){
+                  this.currentGroupName = this.$root.qwirkUser.contacts[index].qwirkGroup.name;
+              		this.$router.push('/user/' + this.currentGroupName)
+                }else{
+                  window.location.href = '/user/';
+                }
+              }
+            }else{
+            	console.error("can't find contact group to delete: ", data.groupName);
+            }
+          }
+          else{
+            let index = -1;
+            this.$root.qwirkUser.qwirkGroups.forEach((qwirkGroup, i) => {
+              if(qwirkGroup.name === data.groupName){
+                index = i;
+              }
+            });
+
+            if(index !== -1){
+              this.$root.qwirkUser.qwirkGroups.splice(index, 1);
+              if(this.currentGroupName === data.groupName){
+                if(this.$root.qwirkUser.qwirkGroups.length > 0){
+                  this.currentGroupName = this.$root.qwirkUser.qwirkGroups[index].name;
+                  this.$router.push('/user/' + this.currentGroupName)
+                }else{
+                  window.location.href = '/user/';
+                }
+              }
+            }else{
+              console.error("can't find group to delete: ", data.groupName);
+            }
+          }
         }
       };
 
@@ -224,9 +303,12 @@ export default{
 
         this.$router.push('/user/' + this.currentGroupName)
 
-      }, function(err){
-
-        console.log("error :", err);
+      }, (err) => {
+        if(err.body.status === 'error'){
+          console.log("error :", err);
+          this.error.copyConstructor(err.body);
+          this.showModalError = true;
+        }
       });
     },
     addUserToChannel: function(channelName){
@@ -283,11 +365,16 @@ export default{
         // TODO display message that said your modifications was good taken
         this.currentGroupName = this.groupName;
         this.showModal = false;
+
         this.$router.push('/user/' + this.currentGroupName);
         this.groupName = '';
 
-      }, function(err){
+      }, (err) => {
         console.log("error :", err);
+        if(err.body.status === 'error'){
+          this.error.copyConstructor(err.body);
+          this.showModalError = true;
+        }
       });
     },
     processNotification: function(notification){
@@ -447,6 +534,15 @@ export default{
     padding-top: 1rem;
     padding-left: 1.7rem;
     margin-bottom: 1rem;
+  }
+
+  #searchPart{
+    position: relative;
+    width: 80%;
+  }
+
+  #searchBarText{
+    width: 100%;
   }
 
   .chatKind{
