@@ -2,13 +2,17 @@ exec 2> /tmp/rc.local.log      # send stderr from rc.local to a log file
 exec 1>&2                      # send stdout to the same log file
 set -x                         # tell sh to display commands before execution
 
-. /home/user/.virtualenvs/qwirk-python/bin/activate
+. /home/webserver/.virtualenvs/qwirk-python/bin/activate
 
-cd /home/user/path/to/server
+cd /home/webserver/4PJT
 
 uwsgi --ini config/server_uwsgi.ini &
 
+cd server
+
 (python manage.py runworker &) && (daphne server.asgi:channel_layer &)
+
+/home/webserver/.nvm/versions/node/v7.10.0/bin/node /home/webserver/4PJT/RTCMultiConnection/server.js
 
 deactivate
 
