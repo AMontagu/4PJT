@@ -41,7 +41,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Message
-		fields = ('qwirkUser', 'qwirkGroup', 'text', 'dateTime', 'type')
+		fields = ('qwirkUser', 'qwirkGroup', 'text', 'dateTime', 'type', 'file')
 
 
 class MessageSerializerSimple(serializers.ModelSerializer):
@@ -54,7 +54,7 @@ class MessageSerializerSimple(serializers.ModelSerializer):
 
 	class Meta:
 		model = Message
-		fields = ('qwirkGroup', 'qwirkUser', 'text', 'dateTime', 'type')
+		fields = ('qwirkGroup', 'qwirkUser', 'text', 'dateTime', 'type', 'file')
 
 
 class NotificationSerializer(serializers.ModelSerializer):

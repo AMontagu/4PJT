@@ -17,9 +17,11 @@ from rest_framework.authtoken.models import Token
 from channels import Group
 from rest_framework.renderers import JSONRenderer
 
+from project import utils
 from project.models import QwirkGroup, Contact, QwirkUser, Message, Notification
 import json
 import time
+from project.chatbot import botActions
 
 from project.serializer import MessageSerializer, QwirkUserSerializerSimple, NotificationSerializer, \
 	NotificationSerializerSimple
@@ -63,12 +65,13 @@ def checkGroup(url, token):
 			                                              qwirkUser=token.user.qwirkuser).exists()  # Check if the current user logged in with token is a contact of the group he try to connect
 			print("contactRelationExist: " + str(contactRelationExist))
 
-			userIsInGroup = QwirkUser.objects.filter(qwirkGroups__name=groupName).exists()
+			userIsInGroup = token.user.qwirkuser in QwirkGroup.objects.get(name=groupName).qwirkuser_set.all()
 			print("userIsInGroup: " + str(userIsInGroup))
 
 			userIsBanned = False
 
 			if token.user.qwirkuser in QwirkGroup.objects.get(name=groupName).blockedUsers.all():
+				print("user is banned")
 				userIsBanned = True
 
 			if contactRelationExist or (userIsInGroup and not userIsBanned):
@@ -123,49 +126,10 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 				qwirkGroup = QwirkGroup.objects.get(name=kwargs["groupname"])  # TODO check with exist or with try catch but not sur because check in connect need to be tested
 
 				if content["action"] == "message":
-					message = Message.objects.create(qwirkUser=user.qwirkuser, qwirkGroup=qwirkGroup, text=content["content"]["text"], type="message")
-					message.save()
 
-					messageSerialized = MessageSerializer(message)
+					utils.sendMessageToAllUserGroup(qwirkGroup, user, content["content"]["text"], "message")
 
-					text = json.dumps({
-						"action": "new-message",
-						"content": json.dumps(messageSerialized.data)
-					})
-					Group(kwargs["groupname"]).send({
-						"text": text,
-					})
-
-					# NOTIFICATION PART
-
-					if qwirkGroup.isContactGroup:
-						for contact in qwirkGroup.contact_set.all():
-							print(contact.qwirkUser)
-							if contact.qwirkUser != user.qwirkuser:
-								notification = Notification.objects.create(message=message, qwirkUser=contact.qwirkUser)
-								notification.save()
-								serializer = NotificationSerializerSimple(notification)
-								text = json.dumps({
-									"action": "notification",
-									"notification": serializer.data
-								})
-								Group("user" + contact.qwirkUser.user.username).send({
-									"text": text,
-								})
-					else:
-						for qwirkUser in qwirkGroup.qwirkuser_set.all():
-							print(qwirkUser)
-							if qwirkUser != user.qwirkuser:
-								notification = Notification.objects.create(message=message, qwirkUser=qwirkUser)
-								notification.save()
-								serializer = NotificationSerializerSimple(notification)
-								text = json.dumps({
-									"action": "notification",
-									"notification": serializer.data
-								})
-								Group("user" + qwirkUser.user.username).send({
-									"text": text,
-								})
+					self.chatbot(qwirkGroup, user, text=content["content"]["text"])
 
 				elif content["action"] == "call":
 					Group(kwargs["groupname"]).send({
@@ -174,7 +138,6 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 				elif content["action"] == "get-message":
 
 					try:
-						# TODO MAYBE THINK ABOUT USING message_qwirkGroup for cleaning all the notification
 						Notification.objects.filter(message__qwirkGroup__name=kwargs["groupname"],
 																	qwirkUser=user.qwirkuser).delete()
 					except Notification.DoesNotExist:
@@ -235,6 +198,10 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 						requestMessage = qwirkGroup.message_set.get(type='requestMessage')
 						requestMessage.type = "acceptMessage"
 						requestMessage.save()
+
+						utils.sendFriendshipResponse(qwirkGroup, user, "acceptMessage", requestMessage)
+
+
 				elif content["action"] == "decline-contact-request":
 					if qwirkGroup.isContactGroup:
 						contacts = qwirkGroup.contact_set.all()
@@ -245,21 +212,65 @@ class ChatJsonConsumer(JsonWebsocketConsumer):
 						requestMessage = qwirkGroup.message_set.get(type='requestMessage')
 						requestMessage.type = "refuseMessage"
 						requestMessage.save()
+
+
+						utils.sendFriendshipResponse(qwirkGroup, user, "refuseMessage", requestMessage)
 				elif content["action"] == "remove-contact":
 					qwirkGroup.delete()
 				elif content["action"] == "block-contact":
 					if qwirkGroup.isContactGroup:
-						contacts = qwirkGroup.contact_set.all()
-						for contact in contacts:
+						for contact in qwirkGroup.contact_set.all():
 							contact.status = "Block"
 							contact.save()
+
+						requestMessage = qwirkGroup.message_set.get(type='requestMessage')
+						requestMessage.type = "blockMessage"
+						requestMessage.save()
+
+						utils.sendFriendshipResponse(qwirkGroup, user, "blockMessage", requestMessage)
 					else:
 						username = content["content"]["username"]
 						userToBlock = QwirkUser.objects.get(user__username=username)
 						qwirkGroup.blockedUsers.add(userToBlock)
 
+						textMessage = user.username + " has blocked " + userToBlock.user.username
+
+						utils.sendMessageToAllUserGroup(qwirkGroup, user, textMessage, "informations")
+
 		else:
 			print("no groupname in url")
+
+	def chatbot(self, qwirkGroup, user, text):
+		text = text.replace('<br />', ' ')
+		occurenceBot = text.count('@bot')
+		print("occurenceBot = " + str(occurenceBot))
+		if occurenceBot > 0:
+
+			print("calling bot " + str(occurenceBot) + " times")
+			textSplit = text.split('@bot')
+			"""beginWithBot = text.startswith('@bot')
+			if beginWithBot:
+				indexSplit = 0
+			else:
+				indexSplit = 1"""
+
+			indexSplit = 1
+
+			print("textSplit = " + str(textSplit))
+			for i in range(0,occurenceBot):
+
+				actionSplit = textSplit[indexSplit].split()
+
+				for action in botActions:
+					if actionSplit[0] == action["action"]:
+						parameters = list()
+						for j in range(1, action["parameters"] + 1):
+							parameters.append(actionSplit[j])
+						action["function"](qwirkGroup, user, parameters)
+				indexSplit += 1
+
+
+
 
 	def disconnect(self, message, **kwargs):
 		print("disconnect Chat json")

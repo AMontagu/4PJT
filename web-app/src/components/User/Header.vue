@@ -18,9 +18,8 @@
         </div>
       </div>
       <div class="rightHeader">
-        <span v-if="!inCall" class="glyphicon glyphicon glyphicon-earphone qwirkHeaderIcon" aria-hidden="true" v-on:click="emitCallWebRTC()"></span>
-        <span v-if="!groupInformations.isContactGroup" class="glyphicon glyphicon-plus qwirkHeaderIcon" aria-hidden="true" v-on:click="showAddUser()"></span>
-        <div class="btn-group">
+
+        <div class="btn-group rightHeaderElement">
           <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><span class="glyphicon glyphicon-cog qwirkHeaderIcon" aria-hidden="true"></span></button>
           <ul v-if="!groupInformations.isContactGroup" class="dropdown-menu" style="left: -125px;">
             <li><a v-on:click="quitGroup()">Leave {{groupInformations.titleGroupName}}</a></li>
@@ -28,17 +27,33 @@
             <li v-if="groupInformations.isAdmin"><a v-on:click="removeGroup()">Remove {{groupInformations.titleGroupName}}</a></li>
           </ul>
           <ul class="dropdown-menu" style="left: -125px;" v-else>
+            <li><a v-on:click="blockUser()">Block user</a></li>
             <li><a v-on:click="removeGroup()">Remove relationship</a></li>
           </ul>
         </div>
+
+        <div v-if="!groupInformations.isContactGroup" class="rightHeaderElement">
+          <span class="glyphicon glyphicon-plus qwirkHeaderIcon" aria-hidden="true" v-on:click="showAddUser()"></span>
+        </div>
+
+        <div v-if="!inCall" class="rightHeaderElement">
+          <span class="glyphicon glyphicon glyphicon-earphone qwirkHeaderIcon" aria-hidden="true" v-on:click="emitCallWebRTC()"></span>
+        </div>
+
       </div>
     </div>
 
     <modal v-if="showModal" @close="showModal = false">
       <h3 slot="header">Add user</h3>
       <div slot="body">
-        <label for="inputAddUser">Name *</label>
-        <input type="text" class="form-control" v-model="usernameUser" id="inputAddUser"/>
+        <label>Name *</label>
+        <autoComplete
+          :url="this.$root.server + '/user-autocomplete/'"
+          anchor="name"
+          placeholder="Username"
+          class-name="inputText inputSearch"
+          id="addUserGroupInput">
+        </autoComplete>
         <span class="colorError">{{errorUserName}}</span>
 
         <div v-if="groupInformations.isAdmin">
@@ -67,6 +82,7 @@
           <li v-on:click="goToUserProfile(userToShow.user.username)">View user profile</li>
           <li v-on:click="goToUserMessage(userToShow.user.username)">Direct Messages</li>
           <li v-if="groupInformations.isAdmin" v-on:click="giveAdminRight(userToShow.user.username)">Give moderator right</li>
+          <li v-if="groupInformations.isAdmin" v-on:click="kickUser(userToShow.user.username)">Kick User</li>
           <li v-if="groupInformations.isAdmin" v-on:click="banUser(userToShow.user.username)">Ban User</li>
         </ul>
         <ul class="listActions" v-else>
@@ -104,6 +120,7 @@
 <script>
 import Modal from '../shared/Modal.vue'
 import {QwirkUser, Contact} from '../../../static/js/model'
+import AutoComplete from '../shared/AutoComplete.vue'
 
 export default{
     name:"UserHeader",
@@ -113,7 +130,6 @@ export default{
           currentGroupName: "",
           titleGroupName: "",
           showModal: false,
-          usernameUser: "",
           adminUser: false,
           errorUserName: "",
           showUserModal: false,
@@ -158,8 +174,9 @@ export default{
         this.showModal = true;
       },
       addUser: function(){
-        if(this.usernameUser != ""){
-          this.$http.post(this.$root.server + '/addusertogroup/', {groupName: this.currentGroupName, username: this.usernameUser, isAdmin: this.adminUser}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+        let usernameToAdd = document.getElementById('addUserGroupInput').value;
+        if(usernameToAdd !== ""){
+          this.$http.post(this.$root.server + '/addusertogroup/', {groupName: this.currentGroupName, username: usernameToAdd, isAdmin: this.adminUser}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
             console.log("sucess request add user to group/channels", response);
             let data = response.body;
 
@@ -170,6 +187,7 @@ export default{
             console.log(data);
             if(data["status"] == "success"){
               this.showModal = false;
+
             }else{
               this.errorUsername = data["text"];
             }
@@ -186,8 +204,55 @@ export default{
         });
       },
       quitGroup: function(){
-        this.$http.post(this.$root.server + '/quitGroup/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+        this.$http.post(this.$root.server + '/quitgroup/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
           console.log("successfully quitted ", this.currentGroupName);
+
+
+          if (this.groupInformations.isContactGroup) {
+            let index = -1;
+            this.$root.qwirkUser.contacts.forEach((contact, i) => {
+              if (contact.qwirkGroup.name === this.currentGroupName) {
+                index = i;
+              }
+            });
+            if (index !== -1) {
+              if (this.$root.qwirkUser.contacts.length > 0) {
+                if(index === this.$root.qwirkUser.contacts.length){
+                  index--;
+                }
+                this.currentGroupName = this.$root.qwirkUser.contacts[index].qwirkGroup.name;
+                this.$router.push('/user/' + this.currentGroupName)
+              } else {
+                window.location.href = '/user/';
+              }
+            }
+          }else{
+            let index = -1;
+            this.$root.qwirkUser.qwirkGroups.forEach((qwirkGroup, i) => {
+              if(qwirkGroup.name === this.currentGroupName){
+                index = i;
+              }
+            });
+
+            if(index !== -1){
+              this.$root.qwirkUser.qwirkGroups.splice(index, 1);
+              if(this.currentGroupName === this.currentGroupName){
+                if(this.$root.qwirkUser.qwirkGroups.length > 0){
+                	if(index === this.$root.qwirkUser.qwirkGroups.length){
+                		index--;
+                  }
+                  this.currentGroupName = this.$root.qwirkUser.qwirkGroups[index].name;
+                  this.$router.push('/user/' + this.currentGroupName)
+                }else{
+                  window.location.href = '/user/';
+                }
+              }
+            }else{
+              console.error("can't find group to delete: ", this.currentGroupName);
+            }
+          }
+
+
           this.$router.go('/user/');
         });
       },
@@ -260,9 +325,21 @@ export default{
           }
         })
       },
+      blockUser(){
+        this.$http.post(this.$root.server + '/blockuser/', {groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+          console.log("user blocked");
+          window.location.href = '/user/';
+        });
+      },
       banUser(username){
         this.$http.post(this.$root.server + '/banuser/', {username: username, groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
           console.log("user banned");
+          this.showUserModal = false;
+        });
+      },
+      kickUser(username){
+        this.$http.post(this.$root.server + '/kickuser/', {username: username, groupName: this.currentGroupName}, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+          console.log("user kicked");
           this.showUserModal = false;
         });
       },
@@ -282,7 +359,8 @@ export default{
       }
     },
     components:{
-      Modal
+      Modal,
+      AutoComplete
     }
 }
 </script>
@@ -301,6 +379,12 @@ export default{
     text-align: right;
     padding-right: 20px;
     float: right;
+  }
+
+  .rightHeaderElement{
+    float: right;
+    margin-top: 10px;
+    margin-left: 20px;
   }
 
   .leftHeader h4{

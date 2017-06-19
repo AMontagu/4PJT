@@ -50,9 +50,19 @@ class Contact {
 class QwirkGroup {
   constructor() {
     this.name = "";
-    this.private = true;
+    this.isPrivate = true;
     this.isContactGroup = true;
-    this.admin = []
+    this.admins = []
+  }
+
+  copyConstructor(object) {
+    if (typeof object === "string") {
+      object = JSON.parse(object);
+    }
+    this.name = object.name;
+    this.isPrivate = object.isPrivate;
+    this.isContactGroup = object.isContactGroup;
+    this.admins = object.admins;
   }
 }
 
@@ -202,7 +212,7 @@ class GroupInformations {
   }
 
   copyConstructor(object) {
-    if (typeof object == "string") {
+    if (typeof object === "string") {
       object = JSON.parse(object);
     }
     console.log(object);
@@ -219,4 +229,19 @@ class GroupInformations {
 
 }
 
-export {User, QwirkUser, QwirkGroup, Message, GroupInformations, Notification, Contact};
+class Error{
+  constructor() {
+    this.name = "";
+    this.message = "";
+  }
+
+  copyConstructor(object) {
+    if (typeof object === "string") {
+      object = JSON.parse(object);
+    }
+    this.name = object.name;
+    this.message = object.message;
+  }
+}
+
+export {User, QwirkUser, QwirkGroup, Message, GroupInformations, Notification, Contact, Error};

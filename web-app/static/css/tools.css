@@ -494,7 +494,7 @@ img.aligned_middle {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    font-family: 'OpenSans-Bold';
+    font-family: Arial, sans-serif;
     text-overflow: ellipsis;
     box-shadow: none !important;
     border-radius:5px;
@@ -539,7 +539,7 @@ img.aligned_middle {
 
 .unstyleBtn{
   -webkit-font-smoothing: antialiased;
-  font-family: Slack-Lato,appleLogo,sans-serif;
+  font-family: Arial ,sans-serif;
   background: 0 0;
   border: none;
   padding: 0;
@@ -556,7 +556,7 @@ img.aligned_middle {
 
 .btn_unstyle {
   -webkit-font-smoothing: antialiased;
-  font-family: Slack-Lato,appleLogo,sans-serif;
+  font-family: Arial,sans-serif;
   background: 0 0;
   border: none;
   padding: 0;
@@ -668,7 +668,7 @@ img.aligned_middle {
 
 
 .contentBox h2 {
-    font-family: 'OpenSans-Semibold';
+    font-family: Arial, sans-serif;
     color: #c52d2f;
     font-size: 1.5em;
     margin-top: 20px;
@@ -734,25 +734,25 @@ img.aligned_middle {
 
 form p, form label, form h1, form h2, form h3, form h4{
     color:black !important;
-    font-family:OpenSans-Bold;
+    font-family: Arial, sans-serif;
 }
 
 form p{
     font-size:16px;
     line-height: 20px;
-    font-family:OpenSans-Regular;
+    font-family: Arial, sans-serif;
 }
 
 form label{
     font-size:15px;
     line-height: 20px;
-    font-family:OpenSans-Semibold;
+    font-family:Arial, sans-serif;
 }
 
 .reserveForm label{
     font-size:20px;
     line-height: 20px;
-    font-family:OpenSans-Semibold;
+    font-family: Arial, sans-serif;
 }
 
 @media (max-width: 767px) {
@@ -1047,6 +1047,10 @@ form label{
     src: url('/Content/fonts/OpenSans-SemiboldItalic.ttf');
 }*/
 
+/*p, h1, h2, h3, h4, label, button, div, span, li{
+  font-family: Arial, sans-serif;
+}*/
+
 #chart_wrap {
     position: relative;
     height: 100%;
@@ -1310,4 +1314,11 @@ form label{
   margin-right: auto;
   margin-left: auto;
   margin-top: 50px;
+}
+
+.codeBlock{
+  text-align: left;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
 }

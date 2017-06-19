@@ -6,11 +6,14 @@ import App from './App'
 import router from './router'
 
 import {QwirkUser} from '../static/js/model.js';
-let VueResource = require('vue-resource');
-let VueCookie = require('vue-cookie');
+import {Picker, Emoji} from 'emoji-mart-vue';
+import VueResource from 'vue-resource';
+import VueCookie from 'vue-cookie';
 // Tell Vue to use the plugin
 Vue.use(VueResource);
 Vue.use(VueCookie);
+Vue.component('picker', Picker)
+Vue.component('emoji', Emoji)
 
 /* eslint-disable no-new */
 new Vue({
@@ -34,7 +37,7 @@ new Vue({
   computed: {
     wssServer(){
       //return this.wssProtocol + this.serverIp + ':' + this.serverPort;
-      return this.wssProtocol + location.host;
+      return this.wssProtocol + location.host + '/server';
     },
     server(){
       //return this.httpProtocol + this.serverIp + ':' + this.serverPort;

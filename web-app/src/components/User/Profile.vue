@@ -5,24 +5,43 @@
       <div v-if="!editProfile">
         <div class="row marginL10p marginR0">
           <div class="form-login col-xs-12 col-md-8">
-            <h2 class="form-login-heading">Edit your profile</h2>
-            <p class="titleField">User Name:</p>
-            <p class="field">{{ qwirkUser.user.username }}</p>
-            <p class="titleField">First Name :</p>
-            <p class="field">{{ qwirkUser.user.first_name }}</p>
-            <p class="titleField">Last Name :</p>
-            <p class="field">{{ qwirkUser.user.last_name }}</p>
-            <p class="titleField">Email address</p>
-            <p class="field">{{ qwirkUser.user.email }}</p>
-            <p class="titleField">Birth Date: </p>
-            <p class="field">{{ qwirkUser.birthDate }}</p>
-            <p class="titleField">Bio: </p>
-            <p class="field">{{ qwirkUser.bio }}</p>
+            <h1 class="form-login-heading">Your profile:</h1>
+            <div class="divField">
+              <p class="titleField">User Name:</p>
+              <p class="field">{{ qwirkUser.user.username }}</p>
+            </div>
 
-            <button type="button" class="btnAction">Change Password</button>
+            <div class="divField">
+              <p class="titleField">First Name:</p>
+              <p class="field">{{ qwirkUser.user.first_name }}</p>
+            </div>
+
+            <div class="divField">
+              <p class="titleField">Last Name:</p>
+              <p class="field">{{ qwirkUser.user.last_name }}</p>
+            </div>
+
+            <div class="divField">
+              <p class="titleField">Email address:</p>
+              <p class="field">{{ qwirkUser.user.email }}</p>
+            </div>
+
+            <div class="divField">
+              <p class="titleField">Birth Date: </p>
+              <p class="field">{{ qwirkUser.birthDate }}</p>
+            </div>
+
+            <div class="divField">
+              <p class="titleField">Bio: </p>
+              <p class="field">{{ qwirkUser.bio }}</p>
+            </div>
+
+            <!--<button type="button" class="btnAction">Change Password</button>-->
           </div>
-          <div class="col-xs-12 col-md-4 avatarContainer">
-            <img :src="getAvatarSrc()"/>
+          <div class="col-xs-12 col-md-4">
+            <div class="avatarContainer">
+              <img :src="getAvatarSrc()"/>
+            </div>
           </div>
         </div>
 
@@ -34,21 +53,21 @@
       <div v-else>
         <div class="row marginL10p marginR0">
           <div class="form-login col-xs-12 col-md-8">
-            <h2 class="form-login-heading">Edit your profile</h2>
+            <h1 class="form-login-heading">Edit your profile</h1>
             <label>User Name:</label>
-            <p>{{qwirkUser.user.username}}</p>
-            <label for="inputFirstName">First Name *</label>
+            <p class="field">{{qwirkUser.user.username}}</p>
+            <label for="inputFirstName">First Name: *</label>
             <input type="text" id="inputFirstName" class="form-control" placeholder="First Name" v-model="qwirkUser.user.first_name" required autofocus>
-            <label for="inputLastName">Last Name *</label>
+            <label for="inputLastName">Last Name: *</label>
             <input type="text" id="inputLastName" class="form-control" placeholder="Last Name" v-model="qwirkUser.user.last_name" required autofocus>
-            <label for="inputEmail">Email address *</label>
+            <label for="inputEmail">Email address: *</label>
             <input type="email" id="inputEmail" class="form-control" placeholder="Email address" v-model="qwirkUser.user.email" required>
-            <label for="inputBirthDate">Birth Date</label>
+            <label for="inputBirthDate">Birth Date:</label>
             <input type="date" id="inputBirthDate" class="form-control" v-model="qwirkUser.birthDate">
-            <label>Bio</label>
+            <label>Bio:</label>
             <textarea rows="4" cols="50" class="form-control" v-model="qwirkUser.bio"></textarea>
 
-            <button type="button" class="btnAction">Change Password</button>
+            <!--<button type="button" class="btnAction">Change Password</button>-->
           </div>
           <div class="col-xs-12 col-md-4 avatarContainer">
 
@@ -61,7 +80,7 @@
           </div>
         </div>
 
-        <div class="row marginR0">
+        <div class="row marginR0 marginB50 marginT20">
           <button type="button" class="btnAction" v-on:click="cancel()">Cancel</button>
           <button type="button" class="btnAction" v-on:click="saveChanges()">Save Changes</button>
         </div>
@@ -126,15 +145,15 @@ export default{
         });
       },
       fileUpload: function (e) {
-        this.files = e.target.files || e.dataTransfer.files;
+        let files = e.target.files || e.dataTransfer.files;
 
-        if (this.files.length > 0) {
-          this.postFile(false)
+        if (files.length > 0) {
+          this.postFile(files)
         }
       },
-      postFile: function (forceUpdate) {
+      postFile: function (files) {
         let formData = new FormData();
-        formData.append('file', this.files[0]);
+        formData.append('file', files[0]);
 
         this.$http.post(this.$root.server + '/changeavatar/', formData).then((response) => {
 
@@ -183,7 +202,9 @@ export default{
 
   .avatarContainer{
     padding: 50px;
-    margin: 0 auto;
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .avatarContainer img{
@@ -193,6 +214,39 @@ export default{
 
   .changeAvatarLabel{
     margin: 25px;
+  }
+
+  .divField{
+    width: 80%;
+    margin-right: auto;
+    margin-left: auto;
+    -webkit-box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.75);
+    box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.75);
+
+    margin-top: 30px;
+  }
+
+  .titleField{
+    padding-top: 10px;
+    font-size: 22px;
+    font-weight: 500;
+  }
+
+  .field{
+    text-align: left;
+    padding-left: 50px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 18px;
+  }
+
+  .form-login label{
+    font-size: 22px;
+  }
+
+  .form-login input{
+    margin-top: 20px;
   }
 
 </style>

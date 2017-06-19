@@ -68,8 +68,14 @@
               <div class="messageUserName">
                 <p>{{message.qwirkUser.user.username}} <span class="messageTime">{{message.dateTime | hours}}</span></p>
               </div>
-              <div class="messageText">
-                <p>{{message.text}}</p>
+              <div v-if="message.type != 'codeMessage'" class="messageText">
+                <p v-for="line in getLines(message.text)" class="containLine">
+                  <span v-for="element in getElementsInMessage(line)" v-if="element.type == 'text'" v-html="element.message" class="spanLine"></span>
+                  <emoji :emoji="element.emoji.colons" v-else></emoji>
+                </p>
+              </div>
+              <div v-else-if="message.type == 'codeMessage'">
+                <pre class="prettyprint linenums codeBlock" v-html="getCodeMessage(message.text)"></pre>
               </div>
             </div>
           </div>
@@ -104,24 +110,94 @@
             </div>
 
           </div>
+
+          <div v-if="message.type == 'acceptMessage' && groupInformations.qwirkUsers.length > 0">
+            <h3> You and {{ groupInformations.qwirkUsers[0].user.username }} are now friends</h3>
+          </div>
+
+          <div v-if="message.type == 'refuseMessage'">
+            <h3>The demand has been refused</h3>
+          </div>
+
+          <div v-if="message.type == 'blockMessage'">
+            <h3>The relationship is blocked</h3>
+          </div>
+
+          <div v-if="message.type == 'fileMessage'">
+
+            <div class="containerFile">
+              <div class="fileAction">
+                <p>{{ message.file }}</p>
+                <a class="btn btnAction" :href="$root.server+'/downloadfile/?fileName=' + message.file">Download file</a>
+              </div>
+            </div>
+
+          </div>
+
+          <div v-if="message.type == 'imageMessage'">
+
+            <div class="containerImageMessage">
+              <div class="containerImage">
+                <img :src="'/static/media/files/' + message.file"/>
+                <a class="btn" :href="$root.server+'/downloadfile/?fileName=' + message.file">Download</a>
+              </div>
+            </div>
+
+          </div>
+
+          <div v-if="message.type == 'botResponse'">
+
+            <div class="pictureUser">
+              <img src="/static/media/bot.png">
+            </div>
+            <div class="messageContent">
+              <div class="messageUserName">
+                <p>ChatBot <span class="messageTime">{{message.dateTime | hours}}</span></p>
+              </div>
+              <div class="messageText">
+                <p v-for="line in getLines(message.text)" class="containLine">
+                  <span v-for="element in getElementsInMessage(line)" v-if="element.type == 'text'" v-html="element.message" class="spanLine"></span>
+                  <emoji :emoji="element.emoji.colons" v-else></emoji>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="message.type == 'informations'">
+              <p v-for="line in getLines(message.text)" class="containLine italic">
+                <span v-for="element in getElementsInMessage(line)" v-if="element.type == 'text'" v-html="element.message" class="spanLine"></span>
+                <emoji :emoji="element.emoji.colons" v-else></emoji>
+              </p>
+          </div>
+
         </div>
       </div>
+
+      <picker
+        v-if="showEmoji"
+        title="Pick your emoji…"
+        emoji="point_up"
+        @click="handleEmoji"
+      >
+      </picker>
+
       <div class="chatBar">
-        <input class="inputChat" type="text" v-model="inputText" :disabled="!socketIsOpen"
-               v-on:keyup.enter="sendText"/>
+        <textarea id="inputTextAreaChat" class="inputChat" v-model="inputText" :disabled="!socketIsOpen" v-on:keyup="autoGrow" v-on:keyup.enter.prevent="sendText('message', $event)"></textarea>
 
         <div class="btn-group dropup chatOptions">
           <button type="button" id="settingGroupBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="unstyleBtn"><i class="glyphicon glyphicon-plus"></i></button>
           <ul class="dropdown-menu listActions">
-            <li><a>Upload file</a></li>
-            <li><a>Upload code</a></li>
+            <li><label for="file_upload">Upload file</label></li>
+            <li><label for="image_upload">Upload image</label></li>
+            <li><a v-on:click="showModalCodeSnippet = true">Upload code snippet</a></li>
           </ul>
         </div>
 
-        <input type="file" id="file_upload" class="hidden" multiple="multiple">
+        <input type="file" id="file_upload" class="hidden" v-on:change.prevent="fileUpload">
+        <input type="file" id="image_upload" class="hidden" v-on:change.prevent="imageUpload">
 
-        <button type="button" class="btn_unstyle emo_menu">
-          <i class="glyphicon glyphicon-heart"></i>
+        <button type="button" class="btn_unstyle emo_menu" v-on:click="displayEmoji()">
+          &#9786;
         </button>
 
       </div>
@@ -146,6 +222,24 @@
       </div>
     </modal>
 
+    <modal v-if="showModalCodeSnippet" @close="showModalCodeSnippet = false">
+      <h3 slot="header">Add a code snippet</h3>
+      <div slot="body">
+        <label for="codeArea">Language: </label>
+        <textarea id="codeArea" v-model="inputText" placeholder="Your code here"></textarea>
+      </div>
+
+
+      <div slot="footer">
+        <button class="modal-default-button" @click="showModalCodeSnippet = false">
+          Close
+        </button>
+        <button class="modal-default-button" v-on:click="sendText('codeMessage')">
+          Send
+        </button>
+      </div>
+    </modal>
+
   </div>
 </template>
 
@@ -153,6 +247,8 @@
   import UserHeader from './Header.vue'
   import Modal from '../shared/Modal.vue'
   import {Message, GroupInformations, QwirkUser} from '../../../static/js/model.js';
+  import Marked from 'marked';
+
   export default{
     name: "UserChat",
     data(){
@@ -169,12 +265,23 @@
         userCallUsername: "",
         showModal: false,
         isAudioEnable: true,
-        isVideoEnable: true
+        isVideoEnable: true,
+        langageCode: '',
+        showModalCodeSnippet: false,
+        showEmoji: false,
+        messageRecupered: 0,
+        oldScrollHeight: 0,
+        originalSizeContainerMessages: 0,
+        originalSizeTextAreaInput: 0,
+        maxHeightTextAreaInput: 150,
       }
     },
     created: function () {
     },
     mounted: function () {
+
+
+      console.log(Marked('I am using __markdown__.'));
 
       //console.log(this.$route.params);
       this.currentGroupName = this.$route.params.name;
@@ -185,6 +292,18 @@
         this.socket.onopen = this.socketOpen;
         this.socket.onerror = this.socketError;
       }
+
+      PR.prettyPrintOne()
+
+      let content = document.getElementById("containerMessages");
+      content.onscroll = () => {
+      	if(content.scrollTop === 0){
+          this.socket.send(JSON.stringify({action: 'get-message', content: {startMessage: this.messageRecupered, endMessage: this.messageRecupered+30}}));
+        }
+      }
+
+      this.originalSizeContainerMessages = document.getElementById("containerMessages").clientHeight;
+      this.originalSizeTextAreaInput = document.getElementById("inputTextAreaChat").clientHeight;
     },
     methods: {
       displayMessage: function (type) {
@@ -192,27 +311,59 @@
       },
       scrollUpdated: function () {
         let objDiv = document.getElementById("containerMessages");
+        objDiv.scrollTop = objDiv.scrollHeight - this.oldScrollHeight;
+        this.oldScrollHeight = objDiv.scrollHeight;
+      },
+      scrollBottom: function () {
+        let objDiv = document.getElementById("containerMessages");
         objDiv.scrollTop = objDiv.scrollHeight;
       },
-      sendText: function () {
-        console.log("send text: " + this.inputText)
-        if (this.socket != undefined) {
-          this.socket.send(JSON.stringify({action: 'message', content: {text: this.inputText}}));
+      sendText: function (type, event) {
+        /*console.log("send text: " + this.inputText)*/
+        if (typeof this.socket !== 'undefined' && this.inputText.trim() !== '') {
+        	if(typeof event === 'undefined' || !event.shiftKey){
+            event.preventDefault();
+            let text = this.inputText.replace(/(?:\r\n|\r|\n)/g, '<br />');
+            this.socket.send(JSON.stringify({action: 'message', content: {text: text, type: type}}));
+            this.inputText = "";
+            let textAreaChat = document.getElementById("inputTextAreaChat");
+            textAreaChat.style.height = this.originalSizeTextAreaInput+"px";
+            let containerMessages = document.getElementById("containerMessages");
+            containerMessages.style.height = this.originalSizeContainerMessages+"px";
+            if(this.showModalCodeSnippet){
+              this.showModalCodeSnippet = false;
+            }
+          }
         } else {
-          console.log("socket is undefined");
+          console.log("socket is undefined or message empty");
         }
-        this.inputText = "";
+      },
+      autoGrow: function() {
+      	let textAreaChat = document.getElementById("inputTextAreaChat");
+        textAreaChat.style.height = "41px";
+        textAreaChat.style.height = (textAreaChat.scrollHeight + 4)+"px";
+
+        let containerMessages = document.getElementById("containerMessages");
+        /*console.log("containerMessages.clientHeight = ", containerMessages.clientHeight);
+        console.log("textAreaChat.scrollHeight = ", textAreaChat.scrollHeight);
+        console.log("originalSizeContainerMessages = ", this.originalSizeContainerMessages);*/
+        let scrollHeight = textAreaChat.scrollHeight;
+        if(scrollHeight > this.maxHeightTextAreaInput){
+          scrollHeight = this.maxHeightTextAreaInput;
+        }
+        containerMessages.style.height = this.originalSizeContainerMessages - (scrollHeight - this.originalSizeTextAreaInput) +"px";
+        this.scrollBottom();
       },
       socketOpen: function () {
         this.socketIsOpen = true;
         console.log("socket is open");
         //get the last fifty messages of this discussion
-        this.socket.send(JSON.stringify({action: 'get-message', content: {startMessage: 0, endMessage: 30}}));
+        this.socket.send(JSON.stringify({action: 'get-message', content: {startMessage: this.messageRecupered, endMessage: this.messageRecupered + 30}}));
         this.socket.send(JSON.stringify({action: 'get-group-informations'}));
       },
       socketError: function (err) {
         console.log("ERROR : ", err);
-        window.location.href = "/user";
+        window.location.href = "/user/";
       },
       socketMessage: function (message) {
         let data = JSON.parse(message.data);
@@ -220,17 +371,50 @@
         if (data.action === "new-message") {
           this.messages.push(JSON.parse(data.content));
           //console.log(this.messages);
+          this.messageRecupered = this.messages.length;
           setTimeout(() => {
-            this.scrollUpdated()
+            this.scrollBottom()
           }, 200);
         } else if (data.action === "saved-messages") {
-          //console.log(data.content)
-          this.messages = this.messages.concat(JSON.parse(data.content).reverse());
-          //console.log(this.messages);
+          //console.log(data.content);
 
+          this.messages = JSON.parse(data.content).reverse().concat(this.messages);
           setTimeout(() => {
             this.scrollUpdated()
           }, 300);
+
+          this.messageRecupered = this.messages.length;
+
+        } else if (data.action === "newUser") {
+          //console.log(data.content);
+
+          let qwirkUser = new QwirkUser();
+          qwirkUser.copyConstructor(data.qwirkUser);
+
+          this.groupInformations.qwirkUsers.push(qwirkUser);
+
+          console.log(this.groupInformations.qwirkUsers);
+
+        } else if (data.action === "userLeave") {
+          //console.log(data.content);
+
+          let index = -1;
+
+          this.groupInformations.qwirkUsers.forEach((qwirkUser, i) => {
+          	if(qwirkUser.user.username === data.username){
+              this.groupInformations.qwirkUsers.splice(i, 1);
+            }
+          });
+
+        } else if (data.action === "friendShipResponse") {
+          console.log(data.friendShipResponse);
+
+          this.messages.forEach((message) => {
+          	if(message.type === "requestMessage"){
+          		message.type = data.friendShipResponse;
+            }
+          })
+
         } else if (data.action === "group-informations") {
           //console.log(data.content)
           this.groupInformations.copyConstructor(data.content);
@@ -258,6 +442,101 @@
       blockUser: function (username) {
         this.socket.send(JSON.stringify({action: 'block-contact', content: {username: username}}));
         this.groupInformations.statusContact = "Block";
+      },
+      fileUpload: function(e) {
+        let files = e.target.files || e.dataTransfer.files;
+
+        if (files.length > 0) {
+          this.postFile(files, 'fileMessage')
+        }
+      },
+      imageUpload: function(e) {
+        let files = e.target.files || e.dataTransfer.files;
+
+        if (files.length > 0) {
+          this.postFile(files, 'imageMessage')
+        }
+      },
+      postFile: function (files, type) {
+        let formData = new FormData();
+        formData.append('file', files[0]);
+        formData.append('groupName', this.currentGroupName);
+        formData.append('type', type);
+
+        this.$http.post(this.$root.server + '/postfile/', formData).then((response) => {
+
+          let data = response.body;
+
+        }, (response) => {
+          console.error(response);
+        });
+      },
+      getCodeMessage: function(message) {
+        return PR.prettyPrintOne(message);
+      },
+      getLines: function(message){
+      	return message.split('<br />');
+      },
+      getElementsInMessage: function(message){
+
+      	let elements = [];
+
+        let emojis = this.findEmoji(message);
+
+        let currentOffset = 0;
+
+        if(emojis.length > 0){
+        	emojis.forEach((emoji) => {
+        		let text = message.slice(currentOffset, emoji.offset);
+        		elements.push({type:'text', message: Marked(text)});
+            elements.push({type:'emoji', emoji: emoji});
+            currentOffset = emoji.offset + emoji.length;
+          });
+        }else{
+        	elements.push({type:'text', message: Marked(message)});
+        }
+
+      	return elements;
+      },
+      displayEmoji: function(){
+      	if(!this.showEmoji){
+          this.showEmoji = true;
+          let clickCount = 0;
+          let clickFunction = () => {
+            clickCount++;
+            if(clickCount > 1){
+              this.showEmoji = false;
+              clickCount = 0;
+              document.removeEventListener("click", clickFunction);
+            }
+          }
+          document.addEventListener("click", clickFunction);
+        }else{
+          this.showEmoji = false;
+        }
+      },
+      handleEmoji: function (emoji, event) {
+        console.log(emoji);
+        if(this.inputText[this.inputText.length-1] != " "){
+          this.inputText += " "
+        }
+        this.inputText += emoji.colons + " ";
+      },
+      findEmoji: function(message){
+        let regex = new RegExp('(^|\\s)(\:[a-zA-Z0-9-_+]+\:(\:skin-tone-[2-6]\:)?)', 'g');
+
+        let match;
+        let emojis = [];
+        while (match = regex.exec(message)) {
+          let colons = match[2];
+          let offset = match.index + match[1].length;
+          let length = colons.length;
+
+
+          emojis.push({colons: colons, offset: offset, length: length})
+        }
+
+        return emojis;
       },
       callWebRTC: function () {
         console.log("we call !");
@@ -446,6 +725,8 @@
       '$route' (to, from) {
         this.currentGroupName = this.$route.params.name;
         this.messages = [];
+        this.messageRecupered = 0;
+        this.oldScrollHeight = 0;
 
         if (this.socket != undefined) {
           this.socket.close();
@@ -517,9 +798,8 @@
   }
 
   .inputChat  {
-    padding: 0 50px 0 50px;
-    height: auto;
-    max-height: none;
+    padding: 5px 75px 5px 55px;
+    max-height: 150px;
     min-height: 41px;
 
     overflow: auto;
@@ -546,7 +826,7 @@
   .emo_menu{
     position: absolute;
     z-index: 1;
-    right: 5px;
+    right: 20px;
     top: 0;
     width: 36px;
     height: 42px;
@@ -554,6 +834,7 @@
     text-align: center;
     color: rgba(0,0,0,.35);
     opacity: 1;
+    font-size: 40px;
   }
 
   .chatOptions {
@@ -593,7 +874,6 @@
   .listActions li {
     display: block;
     color: #000;
-    padding: 8px 16px;
     text-decoration: none;
     text-align: left;
   }
@@ -601,6 +881,49 @@
   .listActions li:hover {
     background-color: #555;
     color: white;
+  }
+
+  .dropdown-menu>li>label {
+    display: block;
+    padding: 10px 20px;
+    clear: both;
+    font-weight: normal;
+    line-height: 1.428571429;
+    color: #333;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .dropdown-menu>li>a {
+    padding: 10px 20px;
+  }
+
+  li label:hover:not(.active) {
+    background-color: #555;
+    color: white;
+  }
+
+  .spanLine{
+    display: inline-block
+  }
+
+  .containLine p{
+    margin: 0;
+  }
+
+  .containLine{
+    display: flex;
+    align-items: center;
+  }
+
+  .emoji-mart{
+    position: absolute;
+    bottom: 70px;
+    right: 50px;
+  }
+
+  .emoji-mart-emoji{
+    display: flex !important;
   }
 
   #containVideoChat {
@@ -628,7 +951,7 @@
   }
 
   .containerScroll {
-    height: calc(100% - 50px);
+    height: calc(100% - 60px);
     overflow-y: scroll;
     overflow-x: hidden;
   }
@@ -648,6 +971,7 @@
     display: block;
     margin-left: 20px;
     position: relative;
+    margin-bottom: 5px;
   }
 
   .pictureUser {
@@ -704,6 +1028,10 @@
     -ms-user-select: text;
     user-select: text;
     word-wrap: break-word;
+  }
+
+  .italic{
+    font-style: italic;
   }
 
   /*////// icons CSS start ////////////////////////*/
