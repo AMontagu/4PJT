@@ -1,6 +1,12 @@
 const electron = require('electron')
 // Module to control application life.
 const app = electron.app
+
+app.commandLine.appendSwitch('disable-web-security');
+app.commandLine.appendSwitch('allow-displaying-insecure-content');
+app.commandLine.appendSwitch('disable-web-security');
+app.commandLine.appendSwitch('ignore-certificate-errors');
+
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
@@ -13,10 +19,13 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
+	mainWindow = new BrowserWindow({width: 1920, height: 1080, 'webPreferences': {
+		'webSecurity': false,
+		'allowRunningInsecureContent': true
+	}})
 
   // and load the index.html of the app.
-  mainWindow.loadURL('http://localhost:8080')
+  mainWindow.loadURL('https://192.168.20.10')
 
   // Open the DevTools.
   //mainWindow.webContents.openDevTools()
