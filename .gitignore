@@ -50,3 +50,5 @@ server/.idea/server.iml
 server/log/ProjectWS.txt
 web-app/.idea/inspectionProfiles/Project_Default.xml
 RTCMultiConnection/.idea
+
+electron/qwirk-win32-x64
