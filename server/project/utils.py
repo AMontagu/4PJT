@@ -7,7 +7,13 @@ from project.serializer import MessageSerializer, NotificationSerializerSimple, 
 
 
 def sendToQwirkGroup(qwirkGroup, currentUser, element):
-	if currentUser.qwirkuser in qwirkGroup.qwirkuser_set.all() and currentUser.qwirkuser not in qwirkGroup.blockedUsers.all():
+	contactGroup = False
+
+	for contact in qwirkGroup.contact_set.all():
+		if contact.qwirkUser == currentUser.qwirkuser:
+			contactGroup = True
+
+	if (currentUser.qwirkuser in qwirkGroup.qwirkuser_set.all() or contactGroup) and currentUser.qwirkuser not in qwirkGroup.blockedUsers.all():
 		Group(qwirkGroup.name).send({
 			"text": element,
 		})
