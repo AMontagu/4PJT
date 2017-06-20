@@ -19,10 +19,10 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-	mainWindow = new BrowserWindow({width: 1920, height: 1080, 'webPreferences': {
-		'webSecurity': false,
-		'allowRunningInsecureContent': true
-	}})
+  mainWindow = new BrowserWindow({width: 1920, height: 1080}, fullscreen: true, frame: false, 'webPreferences': {
+      'webSecurity': false,
+      'allowRunningInsecureContent': true
+  })
 
   // and load the index.html of the app.
   mainWindow.loadURL('https://192.168.20.10')
