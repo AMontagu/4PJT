@@ -354,7 +354,7 @@ export default{
       // TODO check if name exist
       let data = {groupName: this.groupName, isPrivate: this.createPrivateGroup};
       console.log(data);
-      this.$http.post('http://localhost:8000/creategroup/', data, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
+      this.$http.post(this.$root.server + '/creategroup/', data, {headers: {'Authorization': "Token " + this.$cookie.get('token')}}).then((response) => {
 
       	console.log("sucess create group", response);
       	let qwirkGroup = new QwirkGroup();

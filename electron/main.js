@@ -19,7 +19,7 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 1920, height: 1080, fullscreen: true, 'webPreferences': {
+  mainWindow = new BrowserWindow({width: 1920, height: 1080, 'webPreferences': {
       'webSecurity': false,
       'allowRunningInsecureContent': true
   }})
@@ -28,7 +28,7 @@ function createWindow () {
   mainWindow.loadURL('https://192.168.20.10')
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
